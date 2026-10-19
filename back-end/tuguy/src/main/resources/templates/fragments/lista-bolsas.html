@@ -1,0 +1,46 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="lista" class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Tipo sanguíneo</th>
+                <th>Componente</th>
+                <th>Quantidade (ml)</th>
+                <th>Data de coleta</th>
+                <th>Data de validade</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="bolsa : ${bolsas}">
+                <td th:text="${bolsa.codigo}"></td>
+                <td th:text="${bolsa.tipoSanguineo}"></td>
+                <td th:text="${bolsa.componente}"></td>
+                <td th:text="${bolsa.quantidadeMl}"></td>
+                <td th:text="${bolsa.dataColeta}"></td>
+                <td th:text="${bolsa.dataValidade}"></td>
+                <td th:text="${bolsa.status}"></td>
+                <td>
+                    <form th:if="${requisicao != null}"
+                          th:action="@{/requisicoes/{requisicaoId}/alocar-bolsa/{bolsaId}(requisicaoId=${requisicao.id},bolsaId=${bolsa.id})}"
+                          method="post">
+                        <button class="button" type="submit">Alocar</button>
+                    </form>
+                    <div class="table-actions" th:unless="${requisicao != null}">
+                        <a class="button" th:href="@{/bolsas/{id}/editar(id=${bolsa.id})}">Editar</a>
+                        <form th:action="@{/bolsas/{id}/remover(id=${bolsa.id})}" method="post">
+                            <button class="button remove" type="submit">Remover</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(bolsas)}">
+                <td class="empty" colspan="8"
+                    th:text="${requisicao == null ? 'Nenhuma bolsa cadastrada.' : (#strings.isEmpty(requisicao.tipoSanguineo) ? 'A requisição não possui tipo sanguíneo cadastrado.' : 'Nenhuma bolsa compatível com o tipo sanguíneo da requisição.')}">
+                    Nenhuma bolsa cadastrada.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

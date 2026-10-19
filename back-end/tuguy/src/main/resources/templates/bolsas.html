@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hemocomponentes</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <main class="page">
+        <h1>Hemocomponentes</h1>
+
+        <section class="users-section" th:if="${requisicao != null}">
+            <h2 th:text="|Requisição: ${requisicao.titulo}|">Requisição</h2>
+            <p th:text="${requisicao.descricao}">Descrição da requisição</p>
+            <p th:text="|Tipo sanguíneo: ${requisicao.tipoSanguineo}|">Tipo sanguíneo da requisição</p>
+            <p class="error" th:if="${#strings.isEmpty(requisicao.tipoSanguineo)}">
+                Esta requisição não tem tipo sanguíneo cadastrado; não é possível verificar compatibilidade.
+            </p>
+        </section>
+
+        <section class="users-section">
+            <h2>Bolsas cadastradas</h2>
+            <p class="success" th:if="${sucessoAlocacao}" th:text="${sucessoAlocacao}"></p>
+            <p class="error" th:if="${erroAlocacao}" th:text="${erroAlocacao}"></p>
+            <div th:replace="~{fragments/lista-bolsas :: lista}"></div>
+        </section>
+
+        <section class="form-actions">
+            <a class="button" href="/bolsas/nova">Inserir nova bolsa</a>
+            <a class="button secondary" href="/menu">Voltar ao menu</a>
+        </section>
+    </main>
+</body>
+</html>

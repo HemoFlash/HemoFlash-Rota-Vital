@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${bolsa.id == null ? 'Nova bolsa' : 'Editar bolsa'}">Nova bolsa</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <main class="page">
+        <h1 th:text="${bolsa.id == null ? 'Nova bolsa' : 'Editar bolsa'}">Nova bolsa</h1>
+
+        <section class="form-section">
+            <form class="user-form"
+                  th:action="${bolsa.id == null} ? @{/bolsas} : @{/bolsas/{id}(id=${bolsa.id})}"
+                  th:object="${bolsa}" method="post">
+                <div class="form-field">
+                    <label for="codigo">Código</label>
+                    <input id="codigo" type="text" th:field="*{codigo}" required>
+                    <small class="error" th:if="${#fields.hasErrors('codigo')}" th:errors="*{codigo}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="tipoSanguineo">Tipo sanguíneo</label>
+                    <select id="tipoSanguineo" th:field="*{tipoSanguineo}" required>
+                        <option value="">Selecione um tipo sanguíneo</option>
+                        <option value="O-">O-</option>
+                        <option value="O+">O+</option>
+                        <option value="A-">A-</option>
+                        <option value="A+">A+</option>
+                        <option value="B-">B-</option>
+                        <option value="B+">B+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="AB+">AB+</option>
+                    </select>
+                    <small class="error" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="componente">Componente</label>
+                    <input id="componente" type="text" th:field="*{componente}" required>
+                    <small class="error" th:if="${#fields.hasErrors('componente')}" th:errors="*{componente}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="quantidadeMl">Quantidade (ml)</label>
+                    <input id="quantidadeMl" type="number" min="1" th:field="*{quantidadeMl}" required>
+                    <small class="error" th:if="${#fields.hasErrors('quantidadeMl')}" th:errors="*{quantidadeMl}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="dataColeta">Data de coleta</label>
+                    <input id="dataColeta" type="date" th:field="*{dataColeta}" required>
+                    <small class="error" th:if="${#fields.hasErrors('dataColeta')}" th:errors="*{dataColeta}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="dataValidade">Data de validade</label>
+                    <input id="dataValidade" type="date" th:field="*{dataValidade}" required>
+                    <small class="error" th:if="${#fields.hasErrors('dataValidade')}" th:errors="*{dataValidade}"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="status">Status</label>
+                    <input id="status" type="text" th:field="*{status}" required>
+                    <small class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></small>
+                </div>
+
+                <div class="form-actions">
+                    <button class="button" type="submit"
+                            th:text="${bolsa.id == null ? 'Salvar bolsa' : 'Salvar alterações'}">Salvar bolsa</button>
+                    <a class="button secondary" href="/menu">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

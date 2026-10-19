@@ -48,6 +48,7 @@
 
 		<section class="users-section">
 			<h2>Requisições cadastradas</h2>
+			<p class="error" th:if="${erroRequisicao}" th:text="${erroRequisicao}"></p>
 
 			<div class="table-wrapper">
 				<table>
@@ -56,6 +57,10 @@
 							<th>Título</th>
 							<th>Descrição</th>
 							<th>Prioridade</th>
+							<th>Tipo sanguíneo</th>
+							<th>Alocação</th>
+							<th>Bolsa alocada</th>
+							<th>Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -63,9 +68,21 @@
 							<td th:text="${r.titulo}"></td>
 							<td th:text="${r.descricao}"></td>
 							<td th:text="${r.prioridade}"></td>
+							<td th:text="${r.tipoSanguineo}"></td>
+							<td th:text="${codigosAlocadosPorRequisicao.containsKey(r.id) ? 'Alocada' : 'Não alocada'}"></td>
+							<td th:text="${codigosAlocadosPorRequisicao.get(r.id) ?: 'Nenhuma'}"></td>
+							<td>
+								<div class="table-actions">
+									<a class="button" th:href="@{/requisicoes/{id}/alocar-bolsa(id=${r.id})}">Alocar bolsa</a>
+									<a class="button secondary" th:href="@{/requisicoes/{id}/editar(id=${r.id})}">Editar</a>
+									<form th:action="@{/requisicoes/{id}/remover(id=${r.id})}" method="post">
+										<button class="button remove" type="submit">Remover</button>
+									</form>
+								</div>
+							</td>
 						</tr>
 						<tr th:if="${#lists.isEmpty(requisicoes)}">
-							<td class="empty" colspan="3">Nenhuma requisição cadastrada.</td>
+							<td class="empty" colspan="7">Nenhuma requisição cadastrada.</td>
 						</tr>
 					</tbody>
 				</table>
@@ -75,6 +92,14 @@
 		<section class="new-user">
 			<h2>Requisições</h2>
 			<a class="button" href="/requisicoes">Criar requisição</a>
+		</section>
+
+		<section class="users-section">
+			<h2>Hemocomponentes</h2>
+			<div th:replace="~{fragments/lista-bolsas :: lista}"></div>
+			<div class="new-user">
+				<a class="button" href="/bolsas/nova">Inserir nova bolsa</a>
+			</div>
 		</section>
 	</main>
 </body>

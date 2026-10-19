@@ -28,6 +28,10 @@ public class requisicaoservice {
                 .orElseThrow(() -> new RuntimeException("Requisição não encontrada com o id: " + id));
     }
 
+    public void deletar(Long id) {
+        Repository.deleteById(id);
+    }
+
     public requisicao consultarProxima() {
         return fila.consultarInicio();
     }
@@ -35,19 +39,4 @@ public class requisicaoservice {
     public requisicao retirarProxima() {
         return fila.desenfileirar();
     }
-//Novo
-@PostConstruct   // jakarta.annotation.PostConstruct
-void reconstruirFila() {
-    Repository.findAll().stream()
-        .filter(r -> "PENDENTE".equalsIgnoreCase(r.getStatus()))   // ajuste ao seu model
-        .sorted(Comparator.comparing(requisicao::getId))
-        .forEach(fila::enfileirar);
-}
-
-public requisicao salvar(requisicao r) {
-    boolean nova = r.getId() == null;
-    requisicao salva = Repository.save(r);
-    if (nova) fila.enfileirar(salva);
-    return salva;
-}
 }

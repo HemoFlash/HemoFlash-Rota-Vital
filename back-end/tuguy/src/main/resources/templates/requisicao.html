@@ -8,10 +8,12 @@
 </head>
 <body>
     <main class="page">
-        <h1>Nova requisição</h1>
+        <h1 th:text="${requisicao.id == null ? 'Nova requisição' : 'Editar requisição'}">Nova requisição</h1>
 
         <section class="form-section">
-            <form class="user-form" th:action="@{/requisicoes}" th:object="${requisicao}" method="post">
+            <form class="user-form"
+                  th:action="${requisicao.id == null} ? @{/requisicoes} : @{/requisicoes/{id}(id=${requisicao.id})}"
+                  th:object="${requisicao}" method="post">
                 <div class="form-field">
                     <label for="titulo">Título</label>
                     <input id="titulo" type="text" th:field="*{titulo}" required>
@@ -35,8 +37,25 @@
                     <small class="error" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}"></small>
                 </div>
 
+                <div class="form-field">
+                    <label for="tipoSanguineo">Tipo sanguíneo ABO/Rh</label>
+                    <select id="tipoSanguineo" th:field="*{tipoSanguineo}" required>
+                        <option value="">Selecione um tipo sanguíneo</option>
+                        <option value="O-">O-</option>
+                        <option value="O+">O+</option>
+                        <option value="A-">A-</option>
+                        <option value="A+">A+</option>
+                        <option value="B-">B-</option>
+                        <option value="B+">B+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="AB+">AB+</option>
+                    </select>
+                    <small class="error" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
+                </div>
+
                 <div class="form-actions">
-                    <button class="button" type="submit">Enviar requisição</button>
+                    <button class="button" type="submit"
+                            th:text="${requisicao.id == null ? 'Enviar requisição' : 'Salvar alterações'}">Enviar requisição</button>
                     <a class="button secondary" href="/menu">Cancelar</a>
                 </div>
             </form>
