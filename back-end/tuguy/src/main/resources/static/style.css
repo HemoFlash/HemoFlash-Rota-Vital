@@ -77,6 +77,16 @@ input:focus {
     margin-top: 8px;
 }
 
+.table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-actions form {
+    margin: 0;
+}
+
 button {
     border: 0;
     font: inherit;
@@ -94,6 +104,10 @@ button {
 
 .error {
     color: #b91c1c;
+}
+
+.success {
+    color: #15803d;
 }
 
 .table-wrapper {

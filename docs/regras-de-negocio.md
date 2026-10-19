@@ -15,9 +15,9 @@
 | ID | Regra | Onde aplicar | Erro sugerido | Origem |
 |---|---|---|---|---|
 | RN04 | Bolsa só pode ser alocada se `status == DISPONIVEL` e `dataValidade >= hoje` | `alocar()` | `BolsaVencidaException` / `BolsaIndisponivelException` | HU03 C1 |
-| RN05 | Entre bolsas compatíveis, alocar sempre a de menor `dataValidade` (FEFO) | `alocar()` — critério de ordenação antes de selecionar | — | HU03 C2 |
+| RN05 | Entre bolsas compatíveis e disponíveis, alocar primeiro a de menor `dataValidade` (FEFO); ao alocar, associar à requisição e alterar o status para `ALOCADA`, removendo-a da disponibilidade para outras requisições | `alocar()` — seleção FEFO e atualização do vínculo/status | — | HU03 C2 |
 | RN06 | Se não houver bolsa compatível disponível, não alocar e retornar mensagem explicativa | `alocar()` | `NenhumaBolsaCompativelException` | HU03 C3 |
-| RN07 | Compatibilidade ABO/Rh checada via tabela fixa antes de qualquer alocação (uso didático, não clínico) | `verificarCompatibilidade()` | `IncompatibilidadeSanguineaException` | HU04 |
+| RN07 | Para concentrado de hemácias, compatibilidade ABO/Rh entre tipo da requisição (receptor) e tipo da bolsa (doador) checada via tabela fixa antes da alocação; a regra é didática e não clínica | `testeABO()` | `IncompatibilidadeSanguineaException` | HU04 |
 
 ## EstoqueService
 

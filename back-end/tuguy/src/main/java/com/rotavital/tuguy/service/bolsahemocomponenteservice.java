@@ -1,44 +1,102 @@
 package com.rotavital.tuguy.service;
 
 import com.rotavital.tuguy.model.bolsahemocomponente;
+import com.rotavital.tuguy.model.requisicao;
+import com.rotavital.tuguy.repository.bolsahemocomponenterepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class bolsahemocomponenteservice {
 
-    private final Map<Long, bolsahemocomponente> estoque = new ConcurrentHashMap<>();
-    private final AtomicLong sequencia = new AtomicLong(1L);
+    private final bolsahemocomponenterepository repository;
+    private final CompatibilidadeABOService compatibilidadeABOService;
+    private final bolsahemocomponentefefoservice fefoService;
+
+    public bolsahemocomponenteservice(bolsahemocomponenterepository repository,
+                                      CompatibilidadeABOService compatibilidadeABOService,
+                                      bolsahemocomponentefefoservice fefoService) {
+        this.repository = repository;
+        this.compatibilidadeABOService = compatibilidadeABOService;
+        this.fefoService = fefoService;
+    }
 
     public bolsahemocomponente criar(bolsahemocomponente bolsa) {
         if (bolsa == null) {
             throw new IllegalArgumentException("Bolsa não pode ser nula");
         }
 
-        if (bolsa.getId() == null) {
-            bolsa.setId(sequencia.getAndIncrement());
-        }
-
         if (bolsa.getStatus() == null || bolsa.getStatus().isBlank()) {
             bolsa.setStatus("DISPONIVEL");
         }
 
-        estoque.put(bolsa.getId(), bolsa);
-        return bolsa;
+        return repository.save(bolsa);
     }
 
     public List<bolsahemocomponente> listarTodos() {
-        return new ArrayList<>(estoque.values());
+        return repository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, String> codigosAlocadosPorRequisicao() {
+        Map<Long, String> codigosPorRequisicao = new HashMap<>();
+        repository.findAllByStatusIgnoreCase("ALOCADA").stream()
+                .filter(bolsa -> bolsa.getRequisicao() != null)
+                .sorted((primeira, segunda) -> Long.compare(segunda.getId(), primeira.getId()))
+                .forEach(bolsa -> codigosPorRequisicao.putIfAbsent(
+                        bolsa.getRequisicao().getId(), bolsa.getCodigo()));
+        return codigosPorRequisicao;
+    }
+
+    public boolean existePorRequisicao(Long requisicaoId) {
+        return repository.countByRequisicao_Id(requisicaoId) > 0;
+    }
+
+    public List<bolsahemocomponente> testeABO(String tipoRequisicao) {
+        List<bolsahemocomponente> compativeis = repository.findAll().stream()
+                .filter(bolsa -> compatibilidadeABOService.testeABO(
+                        tipoRequisicao, bolsa.getTipoSanguineo()))
+                .toList();
+        return fefoService.listarEmOrdemFefo(compativeis);
+    }
+
+    @Transactional
+    public bolsahemocomponente alocar(Long bolsaId, requisicao requisicao) {
+        if (requisicao == null || requisicao.getId() == null) {
+            throw new IllegalArgumentException("Requisição válida é obrigatória para alocar uma bolsa");
+        }
+
+        bolsahemocomponente bolsa = repository.findById(bolsaId)
+                .orElseThrow(() -> new IllegalArgumentException("Bolsa não encontrada com o id: " + bolsaId));
+
+        if (!bolsa.estaDisponivel()) {
+            throw new IllegalStateException("A bolsa não está mais disponível para alocação");
+        }
+
+        if (!compatibilidadeABOService.testeABO(requisicao.getTipoSanguineo(), bolsa.getTipoSanguineo())) {
+            throw new IllegalArgumentException("A bolsa não é compatível com o tipo sanguíneo da requisição");
+        }
+
+        List<bolsahemocomponente> alocacoesAnteriores =
+                repository.findAllByRequisicao_IdAndStatusIgnoreCase(requisicao.getId(), "ALOCADA");
+        for (bolsahemocomponente alocacaoAnterior : alocacoesAnteriores) {
+            alocacaoAnterior.setRequisicao(null);
+            alocacaoAnterior.setStatus(alocacaoAnterior.estaVencida() ? "VENCIDA" : "DISPONIVEL");
+            repository.save(alocacaoAnterior);
+        }
+
+        bolsa.setRequisicao(requisicao);
+        bolsa.setStatus("ALOCADA");
+        return repository.save(bolsa);
     }
 
     public Optional<bolsahemocomponente> buscarPorId(Long id) {
-        return Optional.ofNullable(estoque.get(id));
+        return repository.findById(id);
     }
 
     public bolsahemocomponente atualizar(Long id, bolsahemocomponente bolsaAtualizada) {
@@ -46,13 +104,12 @@ public class bolsahemocomponenteservice {
             throw new IllegalArgumentException("ID e bolsa são obrigatórios");
         }
 
-        if (!estoque.containsKey(id)) {
+        if (!repository.existsById(id)) {
             throw new IllegalArgumentException("Bolsa não encontrada para o ID informado");
         }
 
         bolsaAtualizada.setId(id);
-        estoque.put(id, bolsaAtualizada);
-        return bolsaAtualizada;
+        return repository.save(bolsaAtualizada);
     }
 
     public boolean deletar(Long id) {
@@ -60,11 +117,16 @@ public class bolsahemocomponenteservice {
             return false;
         }
 
-        return estoque.remove(id) != null;
+        if (!repository.existsById(id)) {
+            return false;
+        }
+
+        repository.deleteById(id);
+        return true;
     }
 
     public List<bolsahemocomponente> listarDisponiveis() {
-        return estoque.values().stream()
+        return repository.findAll().stream()
                 .filter(bolsahemocomponente::estaDisponivel)
                 .toList();
     }

@@ -4,9 +4,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import com.rotavital.tuguy.model.user; 
+import com.rotavital.tuguy.model.user;
+import com.rotavital.tuguy.service.bolsahemocomponenteservice;
 import com.rotavital.tuguy.service.requisicaoservice;
 import com.rotavital.tuguy.service.userservice;
+import com.rotavital.tuguy.ordenacao.prioridadeutil;
 
 import jakarta.validation.Valid;
 
@@ -15,11 +17,14 @@ public class usercontroller {
 
     private final userservice Service;
     private final requisicaoservice RequisicaoService;
+    private final bolsahemocomponenteservice BolsaService;
 
     // instância de ClienteService é injetada pelo Spring no controller
-    public usercontroller(userservice service, requisicaoservice requisicaoService) {
+    public usercontroller(userservice service, requisicaoservice requisicaoService,
+                          bolsahemocomponenteservice bolsaService) {
         this.Service = service;
         this.RequisicaoService = requisicaoService;
+        this.BolsaService = bolsaService;
     }
 
     @GetMapping("/login")
@@ -48,7 +53,11 @@ public class usercontroller {
     public String listar(Model model) {
 
         model.addAttribute("users", Service.listarTodos());
-        model.addAttribute("requisicoes", RequisicaoService.listarTodos());
+        model.addAttribute("requisicoes", RequisicaoService.listarTodos().stream()
+                .sorted(prioridadeutil.COMPARADOR)
+                .toList());
+        model.addAttribute("bolsas", BolsaService.listarTodos());
+        model.addAttribute("codigosAlocadosPorRequisicao", BolsaService.codigosAlocadosPorRequisicao());
 
         // manda renderizar resources/templates/login.html
         // passando para esse html o model criado.

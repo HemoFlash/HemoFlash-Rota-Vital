@@ -46,9 +46,8 @@ public class bolsahemocomponente {
     @NotBlank(message = "Status é obrigatório")
     private String status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requisicao_id", nullable = false)
-    @NotNull(message = "A requisição da bolsa é obrigatória")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "requisicao_id", nullable = true)
     private requisicao requisicao;
 
     public bolsahemocomponente() {

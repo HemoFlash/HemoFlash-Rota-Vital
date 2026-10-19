@@ -26,13 +26,21 @@ public class requisicao {
     @NotBlank(message = "Prioridade é obrigatória")
     private String prioridade;
 
+    @NotBlank(message = "Tipo sanguíneo é obrigatório")
+    private String tipoSanguineo;
+
     public requisicao() { }
 
     public requisicao(Long id, String titulo, String descricao, String prioridade) {
+        this(id, titulo, descricao, prioridade, null);
+    }
+
+    public requisicao(Long id, String titulo, String descricao, String prioridade, String tipoSanguineo) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
         this.prioridade = prioridade;
+        this.tipoSanguineo = tipoSanguineo;
     }
 
     public Long getId() { return id; }
@@ -46,4 +54,7 @@ public class requisicao {
 
     public String getPrioridade() { return prioridade; }
     public void setPrioridade(String prioridade) { this.prioridade = prioridade; }
+
+    public String getTipoSanguineo() { return tipoSanguineo; }
+    public void setTipoSanguineo(String tipoSanguineo) { this.tipoSanguineo = tipoSanguineo; }
 }
