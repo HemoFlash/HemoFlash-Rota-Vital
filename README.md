@@ -143,7 +143,8 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 #### Entrega 03 — 19/10 ☐
 - [x] Mais 2 histórias implementadas (descrição formato POST-IT abaixo)
 - [x] Commits frequentes (mínimo semanais)
-- [x] Screencast do sistema funcionando com as novas histórias e da explicação do código das novas histórias — [Acessar screencast](https://youtu.be/IahHX3jv77I)
+- [x] Screencast do sistema funcionando com as novas histórias  — [Acessar screencast PARTE 1](https://youtu.be/IahHX3jv77I)
+- [x] Screencast da explicação do código das novas histórias - [Acessar screencast PARTE 2](https://youtu.be/Tu8iwwz41mw)
 - [x] Issue/bug tracker atualizado (print anexado)
 
 **Histórias implementadas nesta entrega:**
