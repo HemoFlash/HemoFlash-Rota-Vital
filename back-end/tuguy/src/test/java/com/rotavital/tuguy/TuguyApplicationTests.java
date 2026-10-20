@@ -78,6 +78,33 @@ class TuguyApplicationTests {
 	}
 
 	@Test
+	void formularioRejeitaCodigoDuplicadoDeBolsa() throws Exception {
+		mockMvc.perform(post("/bolsas")
+					.param("codigo", "BOLSA-DUPLICADA")
+					.param("tipoSanguineo", "O+")
+					.param("componente", "Plasma")
+					.param("quantidadeMl", "250")
+					.param("dataColeta", "2026-10-18")
+					.param("dataValidade", "2026-11-18")
+					.param("status", "DISPONIVEL"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/menu"));
+
+		mockMvc.perform(post("/bolsas")
+					.param("codigo", "BOLSA-DUPLICADA")
+					.param("tipoSanguineo", "A+")
+					.param("componente", "Hemácias")
+					.param("quantidadeMl", "300")
+					.param("dataColeta", "2026-10-19")
+					.param("dataValidade", "2026-11-19")
+					.param("status", "DISPONIVEL"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/menu"))
+				.andExpect(flash().attribute("erroBolsa",
+						"Já existe uma bolsa cadastrada com este código."));
+	}
+
+	@Test
 	void formularioSalvaTipoSanguineoDaRequisicao() throws Exception {
 		mockMvc.perform(get("/requisicoes"))
 				.andExpect(status().isOk())

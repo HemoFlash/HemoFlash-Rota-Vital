@@ -91,15 +91,20 @@ public class requisicaocontroller {
             return "bolsa-form";
         }
 
-        if (bolsa.getId() == null) {
-            BolsaService.criar(bolsa);
-        } else {
-            bolsa.setRequisicao(BolsaService.buscarPorId(bolsa.getId())
-                    .orElseThrow(() -> new RuntimeException("Bolsa não encontrada com o id: " + bolsa.getId()))
-                    .getRequisicao());
-            BolsaService.atualizar(bolsa.getId(), bolsa);
+        try {
+            if (bolsa.getId() == null) {
+                BolsaService.criar(bolsa);
+            } else {
+                bolsa.setRequisicao(BolsaService.buscarPorId(bolsa.getId())
+                        .orElseThrow(() -> new RuntimeException("Bolsa não encontrada com o id: " + bolsa.getId()))
+                        .getRequisicao());
+                BolsaService.atualizar(bolsa.getId(), bolsa);
+            }
+            return "redirect:/menu";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("erroBolsa", e.getMessage());
+            return "bolsa-form";
         }
-        return "redirect:/menu";
     }
 
     @GetMapping("/bolsas/{id}/editar")

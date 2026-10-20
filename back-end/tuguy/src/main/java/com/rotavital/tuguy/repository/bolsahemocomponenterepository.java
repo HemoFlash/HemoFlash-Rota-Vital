@@ -10,6 +10,8 @@ import java.util.List;
 public interface bolsahemocomponenterepository extends JpaRepository<bolsahemocomponente, Long> {
     long countByRequisicao_Id(Long requisicaoId);
 
+    boolean existsByCodigoIgnoreCase(String codigo);
+
     List<bolsahemocomponente> findAllByRequisicao_IdAndStatusIgnoreCase(Long requisicaoId, String status);
 
     List<bolsahemocomponente> findAllByStatusIgnoreCase(String status);

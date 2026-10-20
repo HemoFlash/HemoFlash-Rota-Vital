@@ -31,6 +31,15 @@ public class bolsahemocomponenteservice {
             throw new IllegalArgumentException("Bolsa não pode ser nula");
         }
 
+        if (bolsa.getCodigo() == null || bolsa.getCodigo().isBlank()) {
+            throw new IllegalArgumentException("Código da bolsa é obrigatório");
+        }
+
+        String codigoNormalizado = bolsa.getCodigo().trim();
+        if (repository.existsByCodigoIgnoreCase(codigoNormalizado)) {
+            throw new IllegalArgumentException("Já existe uma bolsa cadastrada com este código.");
+        }
+
         if (bolsa.getStatus() == null || bolsa.getStatus().isBlank()) {
             bolsa.setStatus("DISPONIVEL");
         }
