@@ -115,7 +115,7 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 - [x] Ao menos 2 histórias implementadas (com descrição formato POST-IT em "Histórias implementadas" abaixo)
 - [x] Modelo de domínio documentado (diagrama de classes) → [`docs/diagrama-classes.png`](./docs/diagrama-classes.png) · [fonte editável (.mmd)](./docs/diagrama-classes.mmd)
 - [x] Commits frequentes (mínimo semanais) direto na `main`
-- [ ] Issue/bug tracker do GitHub atualizado (print anexado)
+- [x] Issue/bug tracker do GitHub atualizado (print anexado)
 - [x] Screencast do sistema funcionando (uso) —> [Acessar screencast](https://youtu.be/x03UCdjJq5I)
 - [x] Screencast da explicação do código —> [Acessar screencast](https://youtu.be/x03UCdjJq5I)
 
@@ -141,11 +141,10 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 [Acessar Issues no GitHub](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/issues)
 
 #### Entrega 03 — 19/10 ☐
-- [ ] Mais 2 histórias implementadas (descrição formato POST-IT abaixo)
-- [ ] Commits frequentes (mínimo semanais)
-- [ ] Screencast do sistema funcionando com as novas histórias — link:
-- [ ] Screencast da explicação do código das novas histórias — link:
-- [ ] Issue/bug tracker atualizado (print anexado)
+- [x] Mais 2 histórias implementadas (descrição formato POST-IT abaixo)
+- [x] Commits frequentes (mínimo semanais)
+- [x] Screencast do sistema funcionando com as novas histórias e da explicação do código das novas histórias — [Acessar screencast](https://youtu.be/IahHX3jv77I)
+- [x] Issue/bug tracker atualizado (print anexado)
 
 **Histórias implementadas nesta entrega:**
 
