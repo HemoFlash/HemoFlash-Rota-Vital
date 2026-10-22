@@ -286,3 +286,57 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 /src                         # Código-fonte da aplicação Spring Boot
 README.md                    # Este arquivo
 ```
+
+
+## Estratégia de Testes — E2 TDD
+
+### Planejamento e Release 1
+
+O planejamento da Release 1, incluindo backbone, histórias de usuário, tarefas, critérios de aceitação e cenários BDD, está documentado no [Story Map](boarddocs/story-map.md).
+
+A Release 1 prioriza três histórias:
+
+1. Cadastrar requisições de sangue com tipo sanguíneo e prioridade.
+2. Consultar bolsas compatíveis com o tipo sanguíneo solicitado.
+3. Alocar bolsas respeitando a regra FEFO (*First Expired, First Out*) e evitando dupla alocação.
+
+### Estratégia de testes por nível
+
+**Testes unitários:** verificam regras de negócio isoladas, incluindo a matriz de compatibilidade ABO/Rh para hemácias, rejeição de tipos sanguíneos inválidos e ordenação de bolsas pela regra FEFO.
+
+**Testes de integração:** utilizam Spring Boot, MockMvc e banco H2 em memória para verificar operações com requisições, bolsas, consultas e alocações.
+
+**Testes de aceitação:** os cenários em formato Gherkin estão descritos no Story Map e representam os comportamentos esperados das três histórias da Release 1. Esses cenários documentados não equivalem, por si só, a testes BDD automatizados.
+
+### Priorização baseada em riscos
+
+| Prioridade | Risco | Estratégia |
+|---|---|---|
+| Crítica | Apresentar uma bolsa incompatível com o receptor | Testes da matriz ABO/Rh e de filtragem de bolsas |
+| Alta | Alocar uma bolsa já utilizada em outra requisição | Teste de integração da prevenção de dupla alocação |
+| Alta | Priorizar uma bolsa com validade posterior, contrariando FEFO | Testes unitários de ordenação e seleção FEFO |
+| Média | Registrar dados incorretos ou duplicados | Testes de cadastro, validação e persistência |
+
+Essa priorização considera o impacto potencial de uma falha sobre a segurança das decisões de alocação e a integridade dos registros.
+
+### Integração contínua e qualidade
+
+O repositório utiliza GitHub Actions para executar a compilação e os testes Maven em eventos de *push* e *pull request*, conforme o arquivo `.github/workflows/ci.yml`.
+
+O Pull Request #18 contém as alterações de documentação e testes desta etapa. A execução bem-sucedida da CI demonstra que o pipeline concluiu suas verificações, mas não substitui a evidência de um ciclo TDD Red → Green.
+
+A configuração da proteção da branch `main`, exigindo verificações bem-sucedidas antes do merge, depende das permissões de administração do repositório e deve ser comprovada separadamente.
+
+### Limitações e lacunas de cobertura
+
+- A cobertura percentual de código ainda não foi mensurada por uma ferramenta específica, como JaCoCo.
+- Os cenários Gherkin estão documentados, mas não foram apresentados como testes de aceitação automatizados.
+- A execução bem-sucedida da CI não comprova que todas as regras foram originalmente implementadas seguindo TDD.
+- Ainda é necessária evidência cronológica de pelo menos um ciclo Red → Green, com teste falhando antes da implementação e passando após a correção.
+- O sistema é um projeto acadêmico e seus testes não constituem validação clínica ou autorização para uso em decisões transfusionais reais.
+
+### Uso de inteligência artificial
+
+Foi utilizada inteligência artificial generativa como ferramenta de apoio à organização da documentação, elaboração de cenários de teste e preparação de código de testes unitários.
+
+O material gerado foi submetido à revisão humana e integrado ao repositório pelos integrantes da equipe. A execução dos testes pelo GitHub Actions foi utilizada como verificação técnica complementar. A responsabilidade pela avaliação, manutenção e entrega do projeto permanece com a equipe.
