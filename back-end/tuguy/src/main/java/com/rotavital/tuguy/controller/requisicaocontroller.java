@@ -75,18 +75,22 @@ public class requisicaocontroller {
     }
 
     @PostMapping("/bolsas")
-    public String salvarBolsa(@Valid bolsahemocomponente bolsa, BindingResult result, Model model) {
-        return salvarBolsaValidada(bolsa, result, model);
+    public String salvarBolsa(@Valid bolsahemocomponente bolsa, BindingResult result, Model model,
+                              RedirectAttributes redirectAttributes) {
+        return salvarBolsaValidada(bolsa, result, model, redirectAttributes);
     }
 
     @PostMapping("/bolsas/{id}")
     public String atualizarBolsa(@PathVariable Long id, @Valid bolsahemocomponente bolsa,
-                                 BindingResult result, Model model) {
+                                 BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         bolsa.setId(id);
-        return salvarBolsaValidada(bolsa, result, model);
+        return salvarBolsaValidada(bolsa, result, model, redirectAttributes);
     }
 
-    private String salvarBolsaValidada(bolsahemocomponente bolsa, BindingResult result, Model model) {
+    private String salvarBolsaValidada(bolsahemocomponente bolsa, BindingResult result, Model model,
+                                       RedirectAttributes redirectAttributes) {
+        model.addAttribute("bolsa", bolsa);
+
         if (result.hasErrors()) {
             return "bolsa-form";
         }
@@ -102,8 +106,8 @@ public class requisicaocontroller {
             }
             return "redirect:/menu";
         } catch (IllegalArgumentException e) {
-            model.addAttribute("erroBolsa", e.getMessage());
-            return "bolsa-form";
+            redirectAttributes.addFlashAttribute("erroBolsa", e.getMessage());
+            return "redirect:/menu";
         }
     }
 
