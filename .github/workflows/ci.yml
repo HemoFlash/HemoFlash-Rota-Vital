@@ -20,11 +20,12 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'maven'
+        cache-dependency-path: 'back-end/tuguy/pom.xml'
 
     - name: Dar permissao ao Maven Wrapper
       run: chmod +x mvnw
-      working-directory: back-end/rotavital
+      working-directory: back-end/tuguy
 
     - name: Compilar e testar com Maven
       run: ./mvnw clean verify
-      working-directory: back-end/rotavital
+      working-directory: back-end/tuguy
