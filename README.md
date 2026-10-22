@@ -1,7 +1,7 @@
 # Rota Vital — Gestão e Distribuição de Hemocomponentes na Rede de Sangue
 
 > Projeto Integrador — 3º Semestre ADS · Squad **Tuguy**
-> **Última atualização:** `11/08/2026 — Entrega 02 (POO)`
+> **Última atualização:** `19/10/2026 — Entrega 03 (POO)`
 
 ---
 
@@ -60,7 +60,6 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 
 | Integrante | Área/Papel no PI | E-mail (@cesar.school) |
 |---|---|---|
-| Ana Beatriz da Costa | Desenvolvedora | `abblc@cesar.school` |
 | Dilvanir Aline Alves de Melo | Desenvolvedora | `dacm@cesar.school` |
 | Emanoel Alesandro da Silva | Desenvolvedor | `eas3@cesar.school` |
 | Marcio Aureliano da Silva | Desenvolvedor | `maps@cesar.school` |
@@ -69,8 +68,9 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 | Vitória Gabrielly Silva | Líder, Desenvolvedora | `vggs@cesar.school` |
 
 **Membros anteriores / que saíram do grupo:** Nenhuma alteração até o momento.
-
 ---
+| Ana Beatriz da Costa | Desenvolvedora | `abblc@cesar.school` |
+- Saiu do grupo pois está pagando a cadeira com outro professor, portanto está com outro modo de avaliação.
 
 ## Repositório e links úteis
 
@@ -88,8 +88,8 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 | 1 | Kickoff do PI e organização das squads | Todas | ✅ |
 | 2–3 | Modelagem do domínio e escopo de dados/algoritmos | POO, AED, RSD | ✅ |
 | 4–5 | Setup de infraestrutura e início dos algoritmos | SO, RSD, AED | ✅ |
-| 6–7 | Primeira sprint — convergência das entregas U1 | Todas | ☐ |
-| **8–9** | **Fechamento e checkpoint da Entrega U1** | Todas | ☐ |
+| 6–7 | Primeira sprint — convergência das entregas U1 | Todas | ✅ |
+| **8–9** | **Fechamento e checkpoint da Entrega U1** | Todas | ✅ |
 | 10–11 | Replanejamento U2 + compatibilidade/integração | POO, AED | ☐ |
 | 12–13 | Telemetria, concorrência e painéis | SO, RSD, EST | ☐ |
 | 14–15 | Consolidação integrada + preparação da apresentação | Todas | ☐ |
@@ -111,11 +111,11 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 
 **Histórias mapeadas no protótipo:** HU08 (Login/Cadastro), HU01 (Estoque), Lista de Bolsas, Detalhe da Bolsa, Cadastro de Bolsa, Lista de Doações, Cadastro de Doação, Dashboard.
 
-#### Entrega 02 — 21/09 ☐
+#### Entrega 02 — 21/09 ✅
 - [x] Ao menos 2 histórias implementadas (com descrição formato POST-IT em "Histórias implementadas" abaixo)
 - [x] Modelo de domínio documentado (diagrama de classes) → [`docs/diagrama-classes.png`](./docs/diagrama-classes.png) · [fonte editável (.mmd)](./docs/diagrama-classes.mmd)
 - [x] Commits frequentes (mínimo semanais) direto na `main`
-- [ ] Issue/bug tracker do GitHub atualizado (print anexado)
+- [x] Issue/bug tracker do GitHub atualizado (print anexado)
 - [x] Screencast do sistema funcionando (uso) —> [Acessar screencast](https://youtu.be/x03UCdjJq5I)
 - [x] Screencast da explicação do código —> [Acessar screencast](https://youtu.be/x03UCdjJq5I)
 
@@ -140,14 +140,25 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 ![Issues do projeto no GitHub](./docs/prints/issues-entrega-02.png)
 [Acessar Issues no GitHub](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/issues)
 
-#### Entrega 03 — 19/10 ☐
-- [ ] Mais 2 histórias implementadas (descrição formato POST-IT abaixo)
-- [ ] Commits frequentes (mínimo semanais)
-- [ ] Screencast do sistema funcionando com as novas histórias — link:
-- [ ] Screencast da explicação do código das novas histórias — link:
-- [ ] Issue/bug tracker atualizado (print anexado)
+#### Entrega 03 — 19/10 ✅
+- [x] Mais 2 histórias implementadas (descrição formato POST-IT abaixo)
+- [x] Commits frequentes (mínimo semanais)
+- [x] Screencast do sistema funcionando com as novas histórias  — [Acessar screencast PARTE 1](https://youtu.be/IahHX3jv77I)
+- [x] Screencast da explicação do código das novas histórias - [Acessar screencast PARTE 2](https://youtu.be/Tu8iwwz41mw)
+- [x] Issue/bug tracker atualizado (print anexado)
 
 **Histórias implementadas nesta entrega:**
+*(preencher no formato: "Como [usuário], eu gostaria de [ação], para [valor]")*
+> **HU03 — Alocar hemocomponentes priorizando a validade**
+> Como funcionário do hemocentro, eu gostaria de alocar bolsas compatíveis com a requisição hospitalar priorizando aquelas com menor prazo de validade, para que eu possa reduzir o descarte de hemocomponentes por vencimento.
+
+> **HU04 — Consultar compatibilidade ABO/Rh**
+> Como funcionário do hemocentro, eu gostaria de consultar a compatibilidade ABO/Rh entre a requisição e as bolsas disponíveis, para que eu possa selecionar hemocomponentes compatíveis de forma adequada.
+
+**Issue/bug tracker:**
+
+![Issues do projeto no GitHub](./docs/prints/issues-entrega-03.png)
+[Acessar Issues no GitHub](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/issues)
 
 #### Entrega 04 — 09/11 ☐
 - [ ] Histórias restantes implementadas (mínimo 2, descrição formato POST-IT abaixo)
@@ -165,15 +176,27 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 
 ### 🧮 AED (Algoritmos e Estruturas de Dados)
 
-#### Unidade 1 (fecha semana 8–9) ☐
-- [ ] Grafo + Dijkstra (cálculo de rotas)
-- [ ] Hash de estoque
-- [ ] Fila de prioridade (FEFO)
+#### Unidade 1 (fecha semana 8–9) ✅
+- [x] Implementação das estruturas de estoque (lista), requisições (fila) e, se aplicável, histórico de operações (pilha), com alocação manual de memória (malloc/free) e manipulação explícita de ponteiros.
+- [x] Reimplementação das mesmas estruturas, prontas para serem consumidas pela aplicação de POO (Spring Boot).
+- [x] Para cada estrutura, um parágrafo explicando por que a versão Java corresponde à lógica da versão em C/C++ — não uma descrição genérica, mas uma justificativa amarrada ao código real que o aluno escreveu.
+- [x] Modelagem de domínio (entidades e estruturas escolhidas corretamente, com justificativa)
+- [x] Operações básicas funcionando (inserir, remover, consultar) e testadas
+- [x] Código pronto para integração (documentado, sem dependências fixas que travem o consumo pela aplicação)
+- [x] Qualidade e coerência da tradução comentada entre C/C++ e Java.
+
 - Links dos artefatos:
 
 #### Unidade 2 (fecha semana 15–16) ☐
-- [ ] Compatibilidade ABO/Rh integrada
-- [ ] Análise de complexidade
+- [ ] Implementação da lógica de roteirização (busca de vizinho mais próximo), priorização FEFO (inserção ordenada), índice de estoque por hash e compatibilidade ABO/Rh (matriz de compatibilidade).
+- [ ] Reimplementação de todos esses algoritmos, integrados entre si e com a aplicação de POO — dado um pedido, o sistema deve alocar a bolsa compatível, priorizada por validade, e calcular a rota.
+- [ ] Mesma lógica da U1, cobrindo agora os quatro algoritmos.
+- [ ] Para cada algoritmo, a complexidade declarada e justificada com base na implementação real (não copiada de material genérico).
+- [ ] Compatibilidade ABO/Rh implementada corretamente via matriz, com casos de teste cobrindo compatibilidade e incompatibilidade
+- [ ] Integração completa: rota + validade + compatibilidade + consulta por hash funcionando em conjunto, em Java
+- [ ] Análise de complexidade correta e justificada
+- [ ] Qualidade e coerência da tradução comentada entre C/C++ e Java
+
 - Links dos artefatos:
 
 ---
@@ -192,7 +215,7 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 
 ### 🖥️ SO (Sistemas Operacionais)
 
-#### Unidade 1 ☐
+#### Unidade 1 ✅
 - [ ] Pipeline CI/CD + primeiro deploy
 - [x] Threads em processo real — ordenação de requisições por prioridade (sequencial × threads × virtual threads)
 - Links dos artefatos:
@@ -209,9 +232,9 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 
 ### 🌐 RSD (Redes e Sistemas Distribuídos)
 
-#### Unidade 1 ☐
-- [ ] Diagrama de topologia + requisitos de rede
-- [ ] Protocolos/APIs definidos
+#### Unidade 1 ✅
+- [x] Diagrama de topologia + requisitos de rede
+- [x] Protocolos/APIs definidos
 - Links dos artefatos:
 
 #### Unidade 2 ☐
