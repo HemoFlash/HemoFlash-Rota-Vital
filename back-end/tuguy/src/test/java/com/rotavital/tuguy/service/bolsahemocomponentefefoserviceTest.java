@@ -56,5 +56,17 @@ class bolsahemocomponentefefoserviceTest {
 
         assertEquals(List.of(plasma), service.listarPorComponente(List.of(hemacias, plasma), "pLaSmA"));
     }
+    @Test
+void bolsaVinculadaARequisicaoNaoDeveEstarDisponivel() {
+    bolsahemocomponente bolsa = new bolsahemocomponente();
+
+    bolsa.setCodigo("BOLSA-TDD-001");
+    bolsa.setStatus("DISPONIVEL");
+    bolsa.setDataValidade(java.time.LocalDate.now().plusDays(10));
+    bolsa.setRequisicao(new com.rotavital.tuguy.model.requisicao());
+
+    assertFalse(bolsa.estaDisponivel(),
+            "Uma bolsa vinculada a uma requisicao nao pode estar disponivel");
+    }
 }
   
