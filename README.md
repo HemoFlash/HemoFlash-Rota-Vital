@@ -54,6 +54,17 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
    - JDBC URL: `jdbc:h2:file:./data/users-db`
    - Usuário: `sa` · Senha: (em branco)
 
+### Como rodar com Docker
+
+Com o Docker e o Docker Compose instalados, na raiz do repositório execute:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+O Compose inicia a aplicação e o PostgreSQL; a aplicação aguarda o banco ficar saudável. A configuração usa as variáveis do `.env`, e o `.env` local não deve ser versionado. Consulte o estado dos serviços com `docker compose ps` e a saúde da aplicação em **http://localhost:8080/actuator/health**. Para encerrar, execute `docker compose down`.
+
 ---
 
 ## Equipe
