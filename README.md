@@ -340,3 +340,40 @@ A configuração da proteção da branch `main`, exigindo verificações bem-suc
 Foi utilizada inteligência artificial generativa como ferramenta de apoio à organização da documentação, elaboração de cenários de teste e preparação de código de testes unitários.
 
 O material gerado foi submetido à revisão humana e integrado ao repositório pelos integrantes da equipe. A execução dos testes pelo GitHub Actions foi utilizada como verificação técnica complementar. A responsabilidade pela avaliação, manutenção e entrega do projeto permanece com a equipe.
+
+
+## Evidências do ciclo TDD — RED → GREEN
+
+Foi aplicado o desenvolvimento orientado a testes (TDD) à regra de disponibilidade de bolsas de hemocomponentes, com commits separados para o teste e para a implementação.
+
+### RED — Teste falhando
+
+Criamos o teste `bolsaVinculadaARequisicaoNaoDeveEstarDisponivel()`, que verifica se uma bolsa já vinculada a uma requisição é considerada indisponível para novas alocações.
+
+O teste falhou inicialmente porque o método `estaDisponivel()` não verificava a existência de uma requisição associada.
+
+**Resultado:** 22 testes executados, 1 falha.
+
+**Evidência:** [Execução RED no GitHub Actions](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/actions/runs/39873676256)
+
+### GREEN — Implementação e validação
+
+Atualizamos o método `estaDisponivel()` para exigir também que `requisicao == null`.
+
+Em seguida, ajustamos os dados de preparação de um teste de integração existente, que cadastrava bolsas vinculadas como se estivessem disponíveis para alocação.
+
+Após essas alterações, a execução do pipeline foi concluída com sucesso.
+
+**Resultado:** pipeline Maven `clean verify` aprovado.
+
+**Evidência:** [Execução GREEN no GitHub Actions](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/actions/runs/39875683316)
+
+### Regra de negócio validada
+
+Uma bolsa somente pode ser considerada disponível para alocação quando:
+
+- Possui status `DISPONIVEL`;
+- Possui data de validade válida e não está vencida;
+- Não está vinculada a nenhuma requisição.
+
+Esse ciclo demonstra a identificação de uma falha por meio de teste automatizado, sua correção no código de produção e a validação pela integração contínua.
