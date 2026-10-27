@@ -212,10 +212,10 @@ class TuguyApplicationTests {
 
 		bolsaService.criar(new bolsahemocomponente(
 				null, "COMPATIVEL-" + requisicao.getId(), "O-", "Hemácias", 250,
-				coleta, validade, "DISPONIVEL", requisicao));
+				coleta, validade, "DISPONIVEL", null));
 		bolsaService.criar(new bolsahemocomponente(
 				null, "INCOMPATIVEL-" + requisicao.getId(), "A-", "Hemácias", 250,
-				coleta, validade, "DISPONIVEL", requisicao));
+				coleta, validade, "DISPONIVEL", null));
 
 		mockMvc.perform(get("/requisicoes/{id}/alocar-bolsa", requisicao.getId()))
 				.andExpect(status().isOk())

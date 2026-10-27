@@ -67,11 +67,12 @@ public class bolsahemocomponente {
         this.requisicao = requisicao;
     }
 
-    public boolean estaDisponivel() {
-        return "DISPONIVEL".equalsIgnoreCase(this.status)
-                && this.dataValidade != null
-                && !this.dataValidade.isBefore(LocalDate.now());
-    }
+ public boolean estaDisponivel() {
+    return "DISPONIVEL".equalsIgnoreCase(this.status)
+            && this.dataValidade != null
+            && !this.dataValidade.isBefore(LocalDate.now())
+            && this.requisicao == null;
+}
 
     public boolean estaVencida() {
         return this.dataValidade != null && this.dataValidade.isBefore(LocalDate.now());
