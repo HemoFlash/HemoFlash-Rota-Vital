@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class bolsahemocomponentefefoserviceTest {
 
     private final bolsahemocomponentefefoservice service = new bolsahemocomponentefefoservice();
-    private final LocalDate hoje = LocalDate.of(2026, 10, 22);
+    private final LocalDate hoje = LocalDate.now();
 
     private bolsahemocomponente bolsa(String codigo, String componente, int diasAteVencer, String status) {
         return new bolsahemocomponente(null, codigo, "O-", componente, 250,
