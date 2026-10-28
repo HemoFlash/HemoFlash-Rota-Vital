@@ -68,5 +68,11 @@ void bolsaVinculadaARequisicaoNaoDeveEstarDisponivel() {
     assertFalse(bolsa.estaDisponivel(),
             "Uma bolsa vinculada a uma requisicao nao pode estar disponivel");
     }
+
+    @Test
+void demonstracaoBloqueioMergeComTesteVermelho() {
+    assertEquals(1, 2,
+        "E2 TDD: falha intencional para validar a proteção da main");
+}
 }
   
