@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Pontos de Coleta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="max-w-6xl mx-auto p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-hemo-textMain">Pontos de Coleta</h2>
+        <p class="text-sm text-hemo-textSub">Locais físicos de coleta e campanhas de doação programadas</p>
+      </div>
+      <a href="/menu" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Voltar ao painel</span>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-hemo-textMain">Posto Centro</h3>
+          <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-full">Ativo</span>
+        </div>
+        <p class="text-sm text-hemo-textSub">Rua das Flores, 150 • Centro</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-hemo-textMain">Eldorado</h3>
+          <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">Agendado</span>
+        </div>
+        <p class="text-sm text-hemo-textSub">Avenida Brasil, 250 • Eldorado</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-hemo-textMain">Metrô Ana Rosa</h3>
+          <span class="px-2 py-1 bg-hemo-activeBg text-hemo-moss text-[11px] font-bold rounded-full">Operante</span>
+        </div>
+        <p class="text-sm text-hemo-textSub">Estação Ana Rosa • Metrô</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

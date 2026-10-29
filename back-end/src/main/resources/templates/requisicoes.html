@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Requisições</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="max-w-6xl mx-auto p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-hemo-textMain">Requisições de Sangue</h2>
+        <p class="text-sm text-hemo-textSub">Gerencie solicitações de hospitais e despachos operacionais</p>
+      </div>
+      <a href="/requisicoes" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>+ Nova Requisição</span>
+      </a>
+    </div>
+
+    <div class="border-b border-hemo-border flex items-center gap-6 text-xs font-bold" role="tablist" aria-label="Status das requisições">
+      <button type="button" class="pb-3 border-b-2 border-hemo-moss text-hemo-moss flex items-center gap-2">Pendentes <span class="px-2 py-0.5 bg-hemo-coral text-white rounded-full text-[10px]">2</span></button>
+      <button type="button" class="pb-3 text-hemo-textSub hover:text-hemo-textMain">Em Envio (2)</button>
+      <button type="button" class="pb-3 text-hemo-textSub hover:text-hemo-textMain">Concluídas (48)</button>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-0.5 bg-rose-600 text-white text-xs font-bold rounded">EMERGÊNCIA</span>
+            <span class="font-bold text-hemo-textMain">#REQ-2041</span>
+            <span class="text-xs text-hemo-textSub">&bull; Hospital Central de Trauma</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 mt-2">Solicitado: 2 Bolsas Concentrado de Hemácias <span class="text-rose-600 font-extrabold">(Tipo O-)</span></p>
+          <p class="text-xs text-slate-500">Prazo limite de entrega: <span class="font-bold text-slate-700">Hoje até 19:00</span></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="/requisicoes/1/alocar-bolsa" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">Alocar Bolsa</a>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-0.5 bg-amber-500 text-white text-xs font-bold rounded">URGENTE</span>
+            <span class="font-bold text-hemo-textMain">#REQ-2040</span>
+            <span class="text-xs text-hemo-textSub">&bull; Incor - Instituto do Coração</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 mt-2">Solicitado: 1 Bolsa Plasma Fresco Congelado <span class="text-blue-600 font-extrabold">(Tipo A+)</span></p>
+          <p class="text-xs text-slate-500">Prazo limite de entrega: <span class="font-bold text-slate-700">Amanhã 08:00</span></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="/menu" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm">Alocar Bolsa</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

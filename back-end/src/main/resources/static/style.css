@@ -1,175 +1,292 @@
+:root {
+  --hemo-moss: #526858;
+  --hemo-moss-hover: #425447;
+  --hemo-active-bg: #eef2ef;
+  --hemo-bg: #f7f8f7;
+  --hemo-coral: #d97768;
+  --hemo-coral-hover: #c56354;
+  --hemo-text-main: #2d3748;
+  --hemo-text-sub: #64748b;
+  --hemo-border: #e2e8f0;
+  --hemo-white: #ffffff;
+  --hemo-shadow: 0 10px 25px rgba(45, 55, 72, 0.08);
+}
+
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--hemo-bg);
+  color: var(--hemo-text-main);
+  font-family: 'Inter', Arial, sans-serif;
 }
 
 body {
-    margin: 0;
-    min-width: 320px;
-    padding: 24px;
-    color: #1f2937;
-    font-family: Arial, sans-serif;
-    background: #f3f4f6;
+  min-width: 320px;
 }
 
-.page {
-    width: min(100%, 960px);
-    margin: 0 auto;
+a {
+  text-decoration: none;
 }
 
-h1,
-h2 {
-    margin-top: 0;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-h1 {
-    margin-bottom: 32px;
+img {
+  max-width: 100%;
+  display: block;
 }
 
-h2 {
-    font-size: 1.25rem;
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+  background: var(--hemo-bg);
 }
 
-.users-section,
-.new-user,
-.form-section {
-    margin-bottom: 32px;
+.hemo-sidebar {
+  width: 16rem;
+  background: var(--hemo-moss);
+  color: var(--hemo-white);
+  padding: 1.5rem;
 }
 
-.form-section {
-    max-width: 560px;
-    padding: 24px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+.hemo-sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
 }
 
-.user-form {
-    display: grid;
-    gap: 16px;
+.hemo-badge {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  background: var(--hemo-coral);
+  color: var(--hemo-white);
+  font-size: 1rem;
 }
 
-.form-field {
-    display: grid;
-    gap: 6px;
+.hemo-brand-title {
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
-label {
-    font-weight: 600;
+.hemo-brand-subtitle {
+  font-size: 0.7rem;
+  opacity: 0.8;
 }
 
-input {
+.hemo-nav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.hemo-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  transition: 0.2s ease;
+}
+
+.hemo-nav a:hover,
+.hemo-nav a.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--hemo-white);
+}
+
+.hemo-main {
+  flex: 1;
+  padding: 2rem;
+}
+
+.hemo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.hemo-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--hemo-text-sub);
+}
+
+.hemo-title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  font-weight: 700;
+}
+
+.hemo-panel {
+  background: var(--hemo-white);
+  border: 1px solid var(--hemo-border);
+  border-radius: 1.4rem;
+  box-shadow: var(--hemo-shadow);
+}
+
+.hemo-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.hemo-stat {
+  background: var(--hemo-white);
+  border: 1px solid var(--hemo-border);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: var(--hemo-shadow);
+}
+
+.hemo-stat-label {
+  font-size: 0.82rem;
+  color: var(--hemo-text-sub);
+}
+
+.hemo-stat-value {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hemo-stat-value strong {
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+}
+
+.hemo-stat-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.8rem;
+  background: var(--hemo-active-bg);
+  color: var(--hemo-moss);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hemo-table-wrap {
+  overflow-x: auto;
+}
+
+.hemo-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.hemo-table th,
+.hemo-table td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--hemo-border);
+}
+
+.hemo-table th {
+  background: var(--hemo-active-bg);
+  color: var(--hemo-text-sub);
+  font-weight: 600;
+}
+
+.hemo-table td {
+  color: var(--hemo-text-main);
+}
+
+.hemo-pill {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hemo-pill.alert {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.hemo-pill.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.hemo-pill.muted {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.hemo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  border-radius: 0.8rem;
+  border: none;
+  background: var(--hemo-moss);
+  color: var(--hemo-white);
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.hemo-button:hover {
+  background: var(--hemo-moss-hover);
+}
+
+.hemo-button.secondary {
+  background: transparent;
+  border: 1px solid var(--hemo-border);
+  color: var(--hemo-text-main);
+}
+
+.hemo-button.secondary:hover {
+  background: var(--hemo-active-bg);
+}
+
+@media (max-width: 980px) {
+  .page-shell {
+    display: block;
+  }
+
+  .hemo-sidebar {
     width: 100%;
-    min-height: 42px;
-    padding: 8px 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
-    font: inherit;
+  }
+
+  .hemo-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-input:focus {
-    border-color: #2563eb;
-    outline: 2px solid rgb(37 99 235 / 20%);
-}
+@media (max-width: 640px) {
+  .hemo-main {
+    padding: 1rem;
+  }
 
-.form-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-}
+  .hemo-header {
+    display: block;
+  }
 
-.table-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.table-actions form {
-    margin: 0;
-}
-
-button {
-    border: 0;
-    font: inherit;
-    cursor: pointer;
-}
-
-.button.secondary {
-    color: #1f2937;
-    background: #e5e7eb;
-}
-
-.button.secondary:hover {
-    background: #d1d5db;
-}
-
-.error {
-    color: #b91c1c;
-}
-
-.success {
-    color: #15803d;
-}
-
-.table-wrapper {
-    overflow-x: auto;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-}
-
-table {
-    width: 100%;
-    min-width: 600px;
-    border-collapse: collapse;
-}
-
-th,
-td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-th {
-    background: #e5e7eb;
-}
-
-tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.empty {
-    color: #6b7280;
-    text-align: center;
-}
-
-.button {
-    display: inline-block;
-    padding: 8px 12px;
-    color: #ffffff;
-    text-decoration: none;
-    background: #2563eb;
-    border-radius: 4px;
-}
-
-.button:hover {
-    background: #1d4ed8;
-}
-
-.button.remove {
-    background: #dc2626;
-}
-
-.button.remove:hover {
-    background: #b91c1c;
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 16px;
-    }
-
-    h1 {
-        margin-bottom: 24px;
-        font-size: 1.5rem;
-    }
+  .hemo-stat-grid {
+    grid-template-columns: 1fr;
+  }
 }

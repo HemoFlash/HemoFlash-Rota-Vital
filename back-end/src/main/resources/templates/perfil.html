@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Perfil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="max-w-4xl mx-auto p-8 space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wider font-bold text-hemo-textSub">Perfil do usuário</p>
+        <h1 class="text-3xl font-bold text-hemo-textMain">Coordenadora do Hemocentro</h1>
+      </div>
+      <a href="/menu" class="text-sm font-semibold text-hemo-moss hover:underline">Voltar ao painel</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-6">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-hemo-moss text-white flex items-center justify-center text-xl font-bold">CD</div>
+        <div>
+          <p class="text-xl font-bold text-hemo-textMain">Carla Diniz</p>
+          <p class="text-sm text-hemo-textSub">Coordenadora de logística</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="rounded-xl border border-hemo-border p-4"><p class="text-hemo-textSub">E-mail</p><p class="font-bold text-hemo-textMain">coordenacao@hemoflash.org</p></div>
+        <div class="rounded-xl border border-hemo-border p-4"><p class="text-hemo-textSub">Cargo</p><p class="font-bold text-hemo-textMain">Coordenadora</p></div>
+        <div class="rounded-xl border border-hemo-border p-4"><p class="text-hemo-textSub">Último login</p><p class="font-bold text-hemo-textMain">Hoje, às 08:30</p></div>
+        <div class="rounded-xl border border-hemo-border p-4"><p class="text-hemo-textSub">Permissões</p><p class="font-bold text-hemo-textMain">Gestão total</p></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

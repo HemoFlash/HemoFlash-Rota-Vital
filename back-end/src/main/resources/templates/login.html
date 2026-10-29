@@ -1,35 +1,105 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Login</title>
-	<link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Login</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            hemo: {
+              moss: '#526858',
+              mossHover: '#425447',
+              activeBg: '#EEF2EF',
+              bg: '#F7F8F7',
+              coral: '#D97768',
+              coralHover: '#c56354',
+              textMain: '#2D3748',
+              textSub: '#64748B',
+              border: '#E2E8F0'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
-	<main class="page">
-		<h1>Login</h1>
+<body class="min-h-screen bg-hemo-bg text-hemo-textMain antialiased">
+  <div class="min-h-screen flex flex-col md:flex-row">
+    <div class="relative md:w-1/2 min-h-[260px] md:min-h-screen bg-hemo-moss overflow-hidden flex flex-col items-center justify-center text-center p-10 text-white">
+      <div class="absolute -top-10 -left-16 w-56 h-56 rounded-full bg-white/10"></div>
+      <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-hemo-coral/60 translate-x-1/3 -translate-y-1/3"></div>
+      <div class="absolute bottom-0 left-10 w-40 h-40 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-16 right-0 w-64 h-64 rounded-full bg-black/10"></div>
+      <div class="relative z-10 flex flex-col items-center">
+        <div class="w-20 h-20 rounded-2xl bg-hemo-coral flex items-center justify-center text-white shadow-lg mb-6">
+          <i class="fa-solid fa-droplet text-3xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">HemoFlash</h1>
+        <p class="text-sm text-white/80 mt-2">Gestão inteligente de hemocomponentes</p>
+      </div>
+    </div>
 
-		<section class="form-section">
-			<form class="user-form" th:action="@{/login}" method="post">
-				<p class="error" th:if="${erro}" th:text="${erro}"></p>
+    <div class="md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 bg-white">
+      <div class="w-full max-w-sm">
+        <h2 class="text-2xl font-bold text-hemo-textMain">Bem-vindo de volta</h2>
+        <p class="text-sm text-hemo-textSub mt-1 mb-8">Acesse o painel de gestão do hemocentro</p>
 
-				<div class="form-field">
-					<label for="email">E-mail</label>
-					<input id="email" name="email" type="email" autocomplete="email" required>
-				</div>
+        <form th:action="@{/login}" method="post" class="space-y-5">
+          <p class="text-sm text-red-600 font-medium" th:if="${erro}" th:text="${erro}"></p>
 
-				<div class="form-field">
-					<label for="senha">Senha</label>
-					<input id="senha" name="senha" type="password" autocomplete="current-password" required>
-				</div>
+          <div>
+            <label for="email" class="block text-sm font-semibold text-hemo-textMain mb-2">E-mail profissional</label>
+            <input id="email" name="email" type="email" value="coordenacao@hemoflash.org" autocomplete="email" required
+              class="w-full px-4 py-2.5 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent transition-all">
+          </div>
 
-				<div class="form-actions">
-					<button class="button" type="submit">Entrar</button>
-					<a class="button secondary" href="/cadastrar/">Criar conta</a>
-				</div>
-			</form>
-		</section>
-	</main>
+          <div>
+            <label for="senha" class="block text-sm font-semibold text-hemo-textMain mb-2">Senha</label>
+            <div class="relative">
+              <input id="senha" name="senha" type="password" value="12345678" autocomplete="current-password" required
+                class="w-full px-4 py-2.5 pr-10 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent transition-all">
+              <button type="button" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-hemo-textSub">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit"
+            class="w-full py-3 bg-hemo-moss hover:bg-hemo-mossHover text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm">
+            Entrar no Sistema
+          </button>
+
+          <div class="text-center">
+            <button type="button" onclick="alert('Link de redefinição enviado para o e-mail cadastrado.')"
+              class="text-sm text-hemo-textSub hover:text-hemo-moss font-medium transition-colors">
+              Esqueci minha senha
+            </button>
+          </div>
+
+          <div class="text-center pt-1">
+            <a href="/cadastrar/" class="text-sm text-hemo-coral font-semibold hover:underline">
+              Cadastre-se
+            </a>
+          </div>
+        </form>
+
+        <p class="mt-8 text-center text-xs text-slate-400">Versão 3.4.1 (Produção)</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
+

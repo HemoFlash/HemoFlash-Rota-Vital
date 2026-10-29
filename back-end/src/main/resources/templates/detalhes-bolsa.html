@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Detalhes da Bolsa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="max-w-5xl mx-auto p-8 space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-hemo-textSub">Detalhes da bolsa</p>
+        <h1 class="text-3xl font-bold text-hemo-textMain">Bolsa #BS-88375-O</h1>
+      </div>
+      <a href="/bolsas" class="text-sm text-hemo-moss font-semibold hover:underline">Voltar para estoque</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-5">
+          <div class="rounded-xl bg-hemo-activeBg p-4 border border-hemo-moss/20">
+            <p class="text-xs uppercase tracking-wide text-hemo-textSub">Status</p>
+            <p class="mt-2 text-2xl font-bold text-hemo-moss">Disponível para uso</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-hemo-border p-3"><p class="text-hemo-textSub">Tipo</p><p class="font-bold text-hemo-textMain">O+</p></div>
+            <div class="rounded-lg border border-hemo-border p-3"><p class="text-hemo-textSub">Componente</p><p class="font-bold text-hemo-textMain">Hemácias</p></div>
+            <div class="rounded-lg border border-hemo-border p-3"><p class="text-hemo-textSub">Volume</p><p class="font-bold text-hemo-textMain">450 ml</p></div>
+            <div class="rounded-lg border border-hemo-border p-3"><p class="text-hemo-textSub">Data coleta</p><p class="font-bold text-hemo-textMain">28/10/2025</p></div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-white border border-hemo-border rounded-xl p-4">
+            <h3 class="text-sm font-bold text-hemo-textSub uppercase tracking-wider mb-3">Sorologia</h3>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Hepatite B/C: Não Reativo</div>
+              <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">HIV: Não Reativo</div>
+              <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Chagas: Não Reativo</div>
+              <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Sífilis: Não Reativo</div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-hemo-border rounded-xl p-4">
+            <h3 class="text-sm font-bold text-hemo-textSub uppercase tracking-wider mb-3">Histórico</h3>
+            <div class="space-y-4 text-xs">
+              <div class="border-l-2 border-hemo-moss pl-3 py-0.5">
+                <p class="font-bold text-slate-800">Entrada no Estoque</p>
+                <p class="text-slate-500">28/10/2025 - 11:20 por Dr. Carlos</p>
+              </div>
+              <div class="border-l-2 border-slate-300 pl-3 py-0.5">
+                <p class="font-bold text-slate-800">Sorologia Aprovada</p>
+                <p class="text-slate-500">28/10/2025 - 10:45 pelo Lab Central</p>
+              </div>
+              <div class="border-l-2 border-slate-300 pl-3 py-0.5">
+                <p class="font-bold text-slate-800">Coleta Efetuada</p>
+                <p class="text-slate-500">28/10/2025 - 08:30 no Posto Centro</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

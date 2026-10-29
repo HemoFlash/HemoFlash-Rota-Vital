@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Doações</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="max-w-6xl mx-auto p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-hemo-textMain">Doações Recebidas</h2>
+        <p class="text-sm text-hemo-textSub">Histórico de triagem e coletas efetuadas em postos fixos e móveis</p>
+      </div>
+      <a href="/menu" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Voltar ao painel</span>
+      </a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-hemo-border shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-hemo-activeBg text-hemo-textSub">
+            <tr>
+              <th class="text-left px-4 py-3 font-semibold">Código</th>
+              <th class="text-left px-4 py-3 font-semibold">Doador</th>
+              <th class="text-left px-4 py-3 font-semibold">Tipo</th>
+              <th class="text-left px-4 py-3 font-semibold">Data</th>
+              <th class="text-left px-4 py-3 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-hemo-border">
+            <tr>
+              <td class="px-4 py-3 font-bold text-hemo-textMain">DO-55291</td>
+              <td class="px-4 py-3">Maria L. Costa</td>
+              <td class="px-4 py-3">O+</td>
+              <td class="px-4 py-3">28/10/2025</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold">Aprovada</span></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-bold text-hemo-textMain">DO-55292</td>
+              <td class="px-4 py-3">João P. Santos</td>
+              <td class="px-4 py-3">A-</td>
+              <td class="px-4 py-3">28/10/2025</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold">Em triagem</span></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-bold text-hemo-textMain">DO-55293</td>
+              <td class="px-4 py-3">Ana M. Souza</td>
+              <td class="px-4 py-3">B+</td>
+              <td class="px-4 py-3">27/10/2025</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold">Aprovada</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
