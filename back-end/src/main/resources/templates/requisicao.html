@@ -1,65 +1,81 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova requisição</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Requisição</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+  </script>
 </head>
-<body>
-    <main class="page">
-        <h1 th:text="${requisicao.id == null ? 'Nova requisição' : 'Editar requisição'}">Nova requisição</h1>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <main class="min-h-screen p-6 md:p-8">
+    <div class="mx-auto max-w-3xl rounded-2xl border border-hemo-border bg-white p-6 shadow-sm md:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-hemo-textSub">Requisição</p>
+          <h1 class="mt-2 text-3xl font-bold text-hemo-textMain" th:text="${requisicao.id == null ? 'Nova requisição' : 'Editar requisição'}">Nova requisição</h1>
+        </div>
+        <a href="/menu" class="inline-flex items-center gap-2 rounded-xl border border-hemo-border bg-hemo-activeBg px-4 py-2 text-sm font-semibold text-hemo-textMain hover:bg-slate-100">
+          <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+      </div>
 
-        <section class="form-section">
-            <form class="user-form"
-                  th:action="${requisicao.id == null} ? @{/requisicoes} : @{/requisicoes/{id}(id=${requisicao.id})}"
-                  th:object="${requisicao}" method="post">
-                <div class="form-field">
-                    <label for="titulo">Título</label>
-                    <input id="titulo" type="text" th:field="*{titulo}" required>
-                    <small class="error" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></small>
-                </div>
+      <form class="space-y-5"
+            th:action="${requisicao.id == null} ? @{/requisicoes} : @{/requisicoes/{id}(id=${requisicao.id})}"
+            th:object="${requisicao}" method="post">
+        <div>
+          <label for="titulo" class="mb-2 block text-sm font-semibold text-hemo-textMain">Título</label>
+          <input id="titulo" type="text" th:field="*{titulo}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></small>
+        </div>
 
-                <div class="form-field">
-                    <label for="descricao">Descrição</label>
-                    <textarea id="descricao" th:field="*{descricao}" rows="5" required></textarea>
-                    <small class="error" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></small>
-                </div>
+        <div>
+          <label for="descricao" class="mb-2 block text-sm font-semibold text-hemo-textMain">Descrição</label>
+          <textarea id="descricao" th:field="*{descricao}" rows="5" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20"></textarea>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></small>
+        </div>
 
-                <div class="form-field">
-                    <label for="prioridade">Prioridade</label>
-                    <select id="prioridade" th:field="*{prioridade}" required>
-                        <option value="">Selecione uma prioridade</option>
-                        <option value="Baixa">Baixa</option>
-                        <option value="Média">Média</option>
-                        <option value="Alta">Alta</option>
-                    </select>
-                    <small class="error" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}"></small>
-                </div>
+        <div>
+          <label for="prioridade" class="mb-2 block text-sm font-semibold text-hemo-textMain">Prioridade</label>
+          <select id="prioridade" th:field="*{prioridade}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
+            <option value="">Selecione uma prioridade</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Média">Média</option>
+            <option value="Alta">Alta</option>
+          </select>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}"></small>
+        </div>
 
-                <div class="form-field">
-                    <label for="tipoSanguineo">Tipo sanguíneo ABO/Rh</label>
-                    <select id="tipoSanguineo" th:field="*{tipoSanguineo}" required>
-                        <option value="">Selecione um tipo sanguíneo</option>
-                        <option value="O-">O-</option>
-                        <option value="O+">O+</option>
-                        <option value="A-">A-</option>
-                        <option value="A+">A+</option>
-                        <option value="B-">B-</option>
-                        <option value="B+">B+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="AB+">AB+</option>
-                    </select>
-                    <small class="error" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
-                </div>
+        <div>
+          <label for="tipoSanguineo" class="mb-2 block text-sm font-semibold text-hemo-textMain">Tipo sanguíneo ABO/Rh</label>
+          <select id="tipoSanguineo" th:field="*{tipoSanguineo}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
+            <option value="">Selecione um tipo sanguíneo</option>
+            <option value="O-">O-</option>
+            <option value="O+">O+</option>
+            <option value="A-">A-</option>
+            <option value="A+">A+</option>
+            <option value="B-">B-</option>
+            <option value="B+">B+</option>
+            <option value="AB-">AB-</option>
+            <option value="AB+">AB+</option>
+          </select>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
+        </div>
 
-                <div class="form-actions">
-                    <button class="button" type="submit"
-                            th:text="${requisicao.id == null ? 'Enviar requisição' : 'Salvar alterações'}">Enviar requisição</button>
-                    <a class="button secondary" href="/menu">Cancelar</a>
-                </div>
-            </form>
-        </section>
-    </main>
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button class="inline-flex items-center gap-2 rounded-xl bg-hemo-moss px-4 py-3 text-sm font-semibold text-white hover:bg-hemo-mossHover" type="submit"
+                  th:text="${requisicao.id == null ? 'Enviar requisição' : 'Salvar alterações'}">Enviar requisição</button>
+          <a href="/menu" class="inline-flex items-center gap-2 rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm font-semibold text-hemo-textMain hover:bg-hemo-activeBg">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </main>
 </body>
 </html>
