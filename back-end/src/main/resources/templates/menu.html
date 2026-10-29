@@ -1,106 +1,212 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Cadastro de usuários</title>
-	<link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Painel</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            hemo: {
+              moss: '#526858',
+              mossHover: '#425447',
+              activeBg: '#EEF2EF',
+              bg: '#F7F8F7',
+              coral: '#D97768',
+              coralHover: '#c56354',
+              textMain: '#2D3748',
+              textSub: '#64748B',
+              border: '#E2E8F0'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 </head>
 <body>
-	<main class="page">
-		<h1>Cadastro de usuários</h1>
+  <div class="min-h-screen flex">
+    <aside class="w-64 bg-hemo-moss text-white p-6">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-xl bg-hemo-coral flex items-center justify-center">
+          <i class="fa-solid fa-droplet"></i>
+        </div>
+        <div>
+          <div class="text-lg font-bold">HemoFlash</div>
+          <div class="text-xs opacity-80">Hemocentro</div>
+        </div>
+      </div>
 
-		<section class="users-section">
-			<h2>Usuários cadastrados</h2>
+      <nav class="space-y-2">
+        <a href="/menu" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 text-white font-medium">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a href="/bolsas" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
+          <i class="fa-solid fa-vials"></i> Estoque
+        </a>
+        <a href="/requisicoes" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
+          <i class="fa-solid fa-truck-medical"></i> Requisições
+        </a>
+        <a href="/bolsas/nova" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
+          <i class="fa-solid fa-plus"></i> Nova bolsa
+        </a>
+        <a href="/login" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </a>
+      </nav>
+    </aside>
 
-			<div class="table-wrapper">
-				<table>
-					<thead>
-						<tr>
-							<th>Nome</th>
-							<th>E-mail</th>
-							<th colspan="2">Ações</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr th:each="u : ${users}">
-							<td th:text="${u.nome}"></td>
-							<td th:text="${u.email}"></td>
-							<td>
-								<a class="button" th:href="@{/editar/{id}(id=${u.id})}">Alterar</a>
-							</td>
-							<td>
-								<a class="button remove" th:href="@{/remover/{id}(id=${u.id})}">Remover</a>
-							</td>
-						</tr>
-						<tr th:if="${#lists.isEmpty(users)}">
-							<td class="empty" colspan="4">Nenhum usuário cadastrado.</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</section>
+    <main class="flex-1 p-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <p class="text-sm uppercase tracking-[0.2em] text-hemo-textSub">Painel</p>
+          <h1 class="text-3xl font-bold text-hemo-textMain">Dashboard do Hemocentro</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-hemo-textSub">Falta pouco para o próximo ciclo</span>
+          <a href="/requisicoes" class="bg-hemo-moss text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hemo-mossHover">Nova requisição</a>
+        </div>
+      </div>
 
-		<section class="new-user">
-			<h2>Novo usuário</h2>
-			<a class="button" href="/cadastrar/">Cadastrar</a>
-		</section>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white border border-hemo-border rounded-2xl p-5 shadow-sm">
+          <div class="text-sm text-hemo-textSub">Bolsas em estoque</div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-bold text-hemo-textMain" th:text="${#lists.size(bolsas)}">0</div>
+            <div class="w-11 h-11 bg-hemo-activeBg rounded-xl flex items-center justify-center text-hemo-moss"><i class="fa-solid fa-vial"></i></div>
+          </div>
+        </div>
 
-		<section class="users-section">
-			<h2>Requisições cadastradas</h2>
-			<p class="error" th:if="${erroRequisicao}" th:text="${erroRequisicao}"></p>
+        <div class="bg-white border border-hemo-border rounded-2xl p-5 shadow-sm">
+          <div class="text-sm text-hemo-textSub">Requisições</div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-bold text-hemo-textMain" th:text="${#lists.size(requisicoes)}">0</div>
+            <div class="w-11 h-11 bg-hemo-activeBg rounded-xl flex items-center justify-center text-hemo-moss"><i class="fa-solid fa-file-waveform"></i></div>
+          </div>
+        </div>
 
-			<div class="table-wrapper">
-				<table>
-					<thead>
-						<tr>
-							<th>Título</th>
-							<th>Descrição</th>
-							<th>Prioridade</th>
-							<th>Tipo sanguíneo</th>
-							<th>Alocação</th>
-							<th>Bolsa alocada</th>
-							<th>Ações</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr th:each="r : ${requisicoes}">
-							<td th:text="${r.titulo}"></td>
-							<td th:text="${r.descricao}"></td>
-							<td th:text="${r.prioridade}"></td>
-							<td th:text="${r.tipoSanguineo}"></td>
-							<td th:text="${codigosAlocadosPorRequisicao.containsKey(r.id) ? 'Alocada' : 'Não alocada'}"></td>
-							<td th:text="${codigosAlocadosPorRequisicao.get(r.id) ?: 'Nenhuma'}"></td>
-							<td>
-								<div class="table-actions">
-									<a class="button" th:href="@{/requisicoes/{id}/alocar-bolsa(id=${r.id})}">Alocar bolsa</a>
-									<a class="button secondary" th:href="@{/requisicoes/{id}/editar(id=${r.id})}">Editar</a>
-									<form th:action="@{/requisicoes/{id}/remover(id=${r.id})}" method="post">
-										<button class="button remove" type="submit">Remover</button>
-									</form>
-								</div>
-							</td>
-						</tr>
-						<tr th:if="${#lists.isEmpty(requisicoes)}">
-							<td class="empty" colspan="7">Nenhuma requisição cadastrada.</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</section>
+        <div class="bg-white border border-hemo-border rounded-2xl p-5 shadow-sm">
+          <div class="text-sm text-hemo-textSub">Usuários</div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-bold text-hemo-textMain" th:text="${#lists.size(users)}">0</div>
+            <div class="w-11 h-11 bg-hemo-activeBg rounded-xl flex items-center justify-center text-hemo-moss"><i class="fa-solid fa-user"></i></div>
+          </div>
+        </div>
 
-		<section class="new-user">
-			<h2>Requisições</h2>
-			<a class="button" href="/requisicoes">Criar requisição</a>
-		</section>
+        <div class="bg-white border border-hemo-border rounded-2xl p-5 shadow-sm">
+          <div class="text-sm text-hemo-textSub">Alocações ativas</div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-bold text-hemo-textMain" th:text="${#maps.size(codigosAlocadosPorRequisicao)}">0</div>
+            <div class="w-11 h-11 bg-hemo-activeBg rounded-xl flex items-center justify-center text-hemo-moss"><i class="fa-solid fa-check"></i></div>
+          </div>
+        </div>
+      </div>
 
-		<section class="users-section">
-			<h2>Hemocomponentes</h2>
-			<div th:replace="~{fragments/lista-bolsas :: lista}"></div>
-			<div class="new-user">
-				<a class="button" href="/bolsas/nova">Inserir nova bolsa</a>
-			</div>
-		</section>
-	</main>
+      <section class="mt-8 bg-white border border-hemo-border rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <h2 class="text-xl font-bold text-hemo-textMain">Bolsas em estoque</h2>
+          <span class="text-sm text-hemo-textSub" th:text="|${#lists.size(bolsas)} bolsas registradas|">0 bolsas registradas</span>
+        </div>
+        <div class="flex flex-wrap gap-2" th:if="${!#lists.isEmpty(bolsas)}">
+          <span class="inline-flex items-center rounded-full bg-hemo-activeBg px-3 py-1.5 text-xs font-semibold text-hemo-textMain" th:each="bolsa : ${bolsas}" th:text="${bolsa.codigo}">CODIGO</span>
+        </div>
+        <div class="rounded-xl border border-dashed border-hemo-border p-4 text-sm text-hemo-textSub" th:if="${#lists.isEmpty(bolsas)}">
+          Nenhuma bolsa cadastrada no momento.
+        </div>
+      </section>
+
+      <section class="mt-8 bg-white border border-hemo-border rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-hemo-border">
+          <h2 class="text-xl font-bold text-hemo-textMain">Estado das requisições</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead class="bg-hemo-activeBg text-hemo-textSub">
+              <tr>
+                <th class="px-6 py-3 font-semibold">Título</th>
+                <th class="px-6 py-3 font-semibold">Prioridade</th>
+                <th class="px-6 py-3 font-semibold">Alocação</th>
+                <th class="px-6 py-3 font-semibold">Bolsa alocada</th>
+                <th class="px-6 py-3 font-semibold">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-hemo-border">
+              <tr th:each="r : ${requisicoes}">
+                <td class="px-6 py-4 font-medium text-hemo-textMain" th:text="${r.titulo}">Requisição</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-700" th:text="${r.prioridade}">Alta</span></td>
+                <td class="px-6 py-4 text-hemo-textMain" th:text="${codigosAlocadosPorRequisicao.containsKey(r.id) ? 'Alocada' : 'Não alocada'}">Não alocada</td>
+                <td class="px-6 py-4 text-hemo-textMain" th:text="${codigosAlocadosPorRequisicao.get(r.id) ?: 'Nenhuma'}">Nenhuma</td>
+                <td class="px-6 py-4">
+                  <a class="text-sm font-semibold text-hemo-moss hover:underline" th:href="@{/requisicoes/{id}/alocar-bolsa(id=${r.id})}">Alocar bolsa</a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(requisicoes)}">
+                <td class="px-6 py-4 text-hemo-textSub" colspan="5">Nenhuma requisição cadastrada.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 mt-8">
+        <section class="bg-white border border-hemo-border rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-hemo-textMain">Requisições pendentes</h2>
+            <a href="/requisicoes" class="text-sm font-semibold text-hemo-moss">Ver todas</a>
+          </div>
+
+          <div class="space-y-3" th:if="${!#lists.isEmpty(requisicoes)}">
+            <div class="flex items-center justify-between p-3 rounded-xl border border-hemo-border bg-hemo-activeBg" th:each="r : ${requisicoes}">
+              <div>
+                <div class="font-semibold text-hemo-textMain" th:text="${r.titulo}">Requisição</div>
+                <div class="text-xs text-hemo-textSub" th:text="${r.tipoSanguineo}">O-</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-700" th:text="${r.prioridade}">Alta</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full" th:classappend="${codigosAlocadosPorRequisicao.containsKey(r.id)} ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'"
+                      th:text="${codigosAlocadosPorRequisicao.containsKey(r.id) ? 'Alocada' : 'Não alocada'}">Não alocada</span>
+                <a th:href="@{/requisicoes/{id}/alocar-bolsa(id=${r.id})}" class="text-sm font-semibold text-hemo-moss">Alocar</a>
+              </div>
+            </div>
+          </div>
+
+          <div th:if="${#lists.isEmpty(requisicoes)}" class="rounded-xl border border-dashed border-hemo-border p-6 text-center text-sm text-hemo-textSub">
+            Nenhuma requisição cadastrada no momento.
+          </div>
+        </section>
+
+        <section class="bg-white border border-hemo-border rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-hemo-textMain">Ações rápidas</h2>
+          </div>
+          <div class="space-y-3">
+            <a href="/bolsas/nova" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
+              <span class="font-medium">Cadastrar nova bolsa</span>
+              <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
+            </a>
+            <a href="/requisicoes" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
+              <span class="font-medium">Nova requisição</span>
+              <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
+            </a>
+            <a href="/bolsas" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
+              <span class="font-medium">Consultar estoque</span>
+              <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
 </body>
 </html>

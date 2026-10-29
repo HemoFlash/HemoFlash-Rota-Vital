@@ -1,35 +1,55 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hemocomponentes</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoFlash | Estoque</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+  </script>
 </head>
-<body>
-    <main class="page">
-        <h1>Hemocomponentes</h1>
+<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div class="min-h-screen p-6 md:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-hemo-textSub">Estoque</p>
+          <h1 class="mt-2 text-3xl font-bold text-hemo-textMain">Hemocomponentes</h1>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="/bolsas/nova" class="inline-flex items-center gap-2 rounded-xl bg-hemo-moss px-4 py-2 text-sm font-semibold text-white hover:bg-hemo-mossHover">
+            <i class="fa-solid fa-plus"></i> Nova bolsa
+          </a>
+          <a href="/menu" class="inline-flex items-center gap-2 rounded-xl border border-hemo-border bg-white px-4 py-2 text-sm font-semibold text-hemo-textMain hover:bg-hemo-activeBg">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao menu
+          </a>
+        </div>
+      </div>
 
-        <section class="users-section" th:if="${requisicao != null}">
-            <h2 th:text="|Requisição: ${requisicao.titulo}|">Requisição</h2>
-            <p th:text="${requisicao.descricao}">Descrição da requisição</p>
-            <p th:text="|Tipo sanguíneo: ${requisicao.tipoSanguineo}|">Tipo sanguíneo da requisição</p>
-            <p class="error" th:if="${#strings.isEmpty(requisicao.tipoSanguineo)}">
-                Esta requisição não tem tipo sanguíneo cadastrado; não é possível verificar compatibilidade.
-            </p>
-        </section>
+      <section class="rounded-2xl border border-hemo-border bg-white p-5 shadow-sm" th:if="${requisicao != null}">
+        <h2 class="text-xl font-bold text-hemo-textMain" th:text="|Requisição: ${requisicao.titulo}|">Requisição</h2>
+        <p class="mt-2 text-sm text-hemo-textSub" th:text="${requisicao.descricao}">Descrição da requisição</p>
+        <p class="mt-2 text-sm text-hemo-textMain" th:text="|Tipo sanguíneo: ${requisicao.tipoSanguineo}|">Tipo sanguíneo da requisição</p>
+        <p class="mt-2 text-sm font-medium text-rose-600" th:if="${#strings.isEmpty(requisicao.tipoSanguineo)}">
+          Esta requisição não tem tipo sanguíneo cadastrado; não é possível verificar compatibilidade.
+        </p>
+      </section>
 
-        <section class="users-section">
-            <h2>Bolsas cadastradas</h2>
-            <p class="success" th:if="${sucessoAlocacao}" th:text="${sucessoAlocacao}"></p>
-            <p class="error" th:if="${erroAlocacao}" th:text="${erroAlocacao}"></p>
-            <div th:replace="~{fragments/lista-bolsas :: lista}"></div>
-        </section>
-
-        <section class="form-actions">
-            <a class="button" href="/bolsas/nova">Inserir nova bolsa</a>
-            <a class="button secondary" href="/menu">Voltar ao menu</a>
-        </section>
-    </main>
+      <section class="rounded-2xl border border-hemo-border bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <h2 class="text-xl font-bold text-hemo-textMain">Bolsas cadastradas</h2>
+        </div>
+        <p class="mb-3 text-sm font-medium text-emerald-700" th:if="${sucessoAlocacao}" th:text="${sucessoAlocacao}"></p>
+        <p class="mb-3 text-sm font-medium text-rose-600" th:if="${erroAlocacao}" th:text="${erroAlocacao}"></p>
+        <div th:replace="~{fragments/lista-bolsas :: lista}"></div>
+      </section>
+    </div>
+  </div>
 </body>
 </html>

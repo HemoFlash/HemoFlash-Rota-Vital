@@ -27,6 +27,11 @@ public class usercontroller {
         this.BolsaService = bolsaService;
     }
 
+    @GetMapping("/")
+    public String index() {
+        return "redirect:/login";
+    }
+
     @GetMapping("/login")
     public String exibString(Model model) {
         // manda renderizar resources/templates/login.html
