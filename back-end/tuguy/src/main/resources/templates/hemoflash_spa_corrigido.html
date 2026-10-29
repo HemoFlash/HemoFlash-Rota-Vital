@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, initial-scale=1.0">
+  <title>HemoFlash - Sistema de Gestão Hemoterápica</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            hemo: {
+              moss: '#526858',
+              mossHover: '#425447',
+              activeBg: '#EEF2EF',
+              bg: '#F7F8F7',
+              coral: '#D97768',
+              coralHover: '#c56354',
+              textMain: '#2D3748',
+              textSub: '#64748B',
+              border: '#E2E8F0',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html,
+    body {
+      min-width: 1024px;
+    }
+
+    body {
+      background-color: #F7F8F7;
+      color: #2D3748;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #auth-layout {
+      width: 100%;
+    }
+    #screen-1,
+    #screen-2 {
+      width: 100%;
+      flex-direction: row;
+    }
+    #screen-1 > div,
+    #screen-2 > div {
+      width: 50%;
+      min-height: 100vh;
+    }
+    #main-layout {
+      flex-direction: row;
+      min-width: 1024px;
+    }
+    #app-sidebar {
+      display: flex !important;
+      width: 16rem;
+      flex-direction: column;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F7F8F7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    .sidebar-link {
+      transition: all 0.2s ease-in-out;
+    }
+    .sidebar-link.active {
+      background-color: rgba(255,255,255,0.12);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background-color: rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+    
+    /* !important é necessário aqui: o Tailwind via CDN injeta seu próprio
+       <style> depois deste bloco, então utilitários como .flex empatam em
+       especificidade com .screen-view e venceriam por ordem de carregamento,
+       deixando telas "escondidas" visíveis por cima umas das outras. */
+    .screen-view {
+      display: none !important;
+    }
+    .screen-view.active {
+      display: block !important;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .screen-view.active.flex {
+      display: flex !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- AUTH LAYOUT CONTAINER (Screens 1 & 2) -->
+  <div id="auth-layout">
+
+    <!-- TELA 1: LOGIN (tela cheia, independente) -->
+    <div id="screen-1" class="screen-view active min-h-screen flex flex-col md:flex-row">
+
+      <!-- Painel de marca: ocupa a lateral inteira da tela -->
+      <div class="relative md:w-1/2 min-h-[260px] md:min-h-screen bg-hemo-moss overflow-hidden flex flex-col items-center justify-center text-center p-10 text-white">
+        <div class="absolute -top-10 -left-16 w-56 h-56 rounded-full bg-white/10"></div>
+        <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-hemo-coral/60 translate-x-1/3 -translate-y-1/3"></div>
+        <div class="absolute bottom-0 left-10 w-40 h-40 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-16 right-0 w-64 h-64 rounded-full bg-black/10"></div>
+
+        <div class="relative z-10 flex flex-col items-center">
+          <div class="w-20 h-20 rounded-2xl bg-hemo-coral flex items-center justify-center text-white shadow-lg mb-6">
+            <i class="fa-solid fa-droplet text-3xl"></i>
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight">HemoFlash</h1>
+          <p class="text-sm text-white/80 mt-2">Gestão inteligente de hemocomponentes</p>
+        </div>
+      </div>
+
+      <!-- Formulário de login -->
+      <div class="md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 bg-white">
+        <div class="w-full max-w-sm">
+          <h2 class="text-2xl font-bold text-hemo-textMain">Bem-vindo de volta</h2>
+          <p class="text-sm text-hemo-textSub mt-1 mb-8">Acesse o painel de gestão do hemocentro</p>
+
+          <form onsubmit="handleLogin(event)" class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-hemo-textMain mb-2">E-mail profissional</label>
+              <input type="email" id="login-email" value="coordenacao@hemoflash.org" required
+                class="w-full px-4 py-2.5 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent transition-all">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-hemo-textMain mb-2">Senha</label>
+              <div class="relative">
+                <input type="password" id="login-password" value="12345678" required
+                  class="w-full px-4 py-2.5 pr-10 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent transition-all">
+                <button type="button" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-hemo-textSub">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" 
+              class="w-full py-3 bg-hemo-moss hover:bg-hemo-mossHover text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm">
+              Entrar no Sistema
+            </button>
+
+            <div class="text-center">
+              <button type="button" onclick="showToast('Link de redefinição enviado para o e-mail cadastrado.', 'info')" 
+                class="text-sm text-hemo-textSub hover:text-hemo-moss font-medium transition-colors">
+                Esqueci minha senha
+              </button>
+            </div>
+
+            <div class="text-center pt-1">
+              <button type="button" onclick="navigateTo('screen-2')" class="text-sm text-hemo-coral font-semibold hover:underline">
+                Cadastre-se
+              </button>
+            </div>
+          </form>
+
+          <p class="mt-8 text-center text-xs text-slate-400">Versão 3.4.1 (Produção)</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TELA 2: CRIAR CONTA (tela cheia, independente) -->
+    <div id="screen-2" class="screen-view min-h-screen flex flex-col md:flex-row">
+
+      <!-- Painel de marca: ocupa a lateral inteira da tela -->
+      <div class="relative md:w-1/2 min-h-[260px] md:min-h-screen bg-hemo-moss overflow-hidden flex flex-col items-center justify-center text-center p-10 text-white">
+        <div class="absolute -top-10 -left-16 w-56 h-56 rounded-full bg-white/10"></div>
+        <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-hemo-coral/60 translate-x-1/3 -translate-y-1/3"></div>
+        <div class="absolute bottom-0 left-10 w-40 h-40 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-16 right-0 w-64 h-64 rounded-full bg-black/10"></div>
+
+        <div class="relative z-10 flex flex-col items-center">
+          <div class="w-20 h-20 rounded-2xl bg-hemo-coral flex items-center justify-center text-white shadow-lg mb-6">
+            <i class="fa-solid fa-droplet text-3xl"></i>
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight">HemoFlash</h1>
+          <p class="text-sm text-white/80 mt-2">Gestão inteligente de hemocomponentes</p>
+        </div>
+      </div>
+
+      <!-- Formulário de cadastro -->
+      <div class="md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 bg-white">
+        <div class="w-full max-w-sm">
+          <h2 class="text-2xl font-bold text-hemo-textMain">Criar conta</h2>
+          <p class="text-sm text-hemo-textSub mt-1 mb-8">Cadastre-se para acessar o HemoFlash</p>
+
+          <form onsubmit="handleRegister(event)" class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-hemo-textMain mb-2">E-mail</label>
+              <input type="email" placeholder="Digite seu e-mail" required
+                class="w-full px-4 py-2.5 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-hemo-textMain mb-2">Senha</label>
+              <div class="relative">
+                <input type="password" placeholder="Crie uma senha forte" required minlength="8"
+                  class="w-full px-4 py-2.5 pr-10 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
+                <button type="button" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-hemo-textSub">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-hemo-textMain mb-2">Confirmar senha</label>
+              <div class="relative">
+                <input type="password" placeholder="Repita a senha criada" required minlength="8"
+                  class="w-full px-4 py-2.5 pr-10 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
+                <button type="button" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-hemo-textSub">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="terms" required class="rounded border-hemo-border text-hemo-moss focus:ring-hemo-moss">
+              <label for="terms" class="text-xs text-hemo-textSub">Concordo com os termos de biossegurança e LGPD</label>
+            </div>
+
+            <button type="submit" 
+              class="w-full py-3 bg-hemo-moss hover:bg-hemo-mossHover text-white font-semibold rounded-lg shadow-md transition-all text-sm">
+              Cadastrar
+            </button>
+
+            <div class="text-center pt-1">
+              <button type="button" onclick="navigateTo('screen-1')" class="text-sm text-hemo-moss font-semibold hover:underline">
+                Voltar ao login
+              </button>
+            </div>
+          </form>
+
+          <p class="mt-8 text-center text-xs text-slate-400">Versão 3.4.1 (Produção)</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MAIN APP LAYOUT (Screens 3 to 16) -->
+  <div id="main-layout" class="hidden min-h-screen flex flex-col md:flex-row bg-[#F7F8F7]">
+    
+    <!-- SIDEBAR NAV -->
+    <aside id="app-sidebar" class="w-64 bg-hemo-moss text-white flex flex-col flex-shrink-0 z-30">
+      <!-- Brand Logo Header -->
+      <div class="p-5 flex items-center gap-3 cursor-pointer" onclick="navigateTo('screen-3')">
+        <div class="w-9 h-9 rounded-lg bg-hemo-coral flex items-center justify-center text-white shadow-sm">
+          <i class="fa-solid fa-droplet text-lg"></i>
+        </div>
+        <div>
+          <span class="font-bold text-lg tracking-tight text-white block leading-none">HemoFlash</span>
+          <span class="text-[11px] text-white/60">Hemocentro</span>
+        </div>
+      </div>
+
+      <!-- Nav Links List -->
+      <nav class="flex-1 px-3 pb-3 space-y-1 overflow-y-auto">
+        <button onclick="navigateTo('screen-3')" id="nav-screen-3" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-house w-5 text-center"></i>
+          <span>Início</span>
+        </button>
+
+        <button onclick="navigateTo('screen-4')" id="nav-screen-4" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-chart-simple w-5 text-center"></i>
+          <span>Estoque</span>
+        </button>
+
+        <button onclick="navigateTo('screen-5')" id="nav-screen-5" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-cube w-5 text-center"></i>
+          <span>Bolsas</span>
+        </button>
+
+        <button onclick="navigateTo('screen-8')" id="nav-screen-8" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-droplet w-5 text-center"></i>
+          <span>Doações</span>
+        </button>
+
+        <button onclick="navigateTo('screen-10')" id="nav-screen-10" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-house-medical w-5 text-center"></i>
+          <span>Hospitais</span>
+        </button>
+
+        <button onclick="navigateTo('screen-12')" id="nav-screen-12" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-file-lines w-5 text-center"></i>
+          <span>Requisições</span>
+        </button>
+
+        <button onclick="navigateTo('screen-15')" id="nav-screen-15" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-location-dot w-5 text-center"></i>
+          <span>Mapa</span>
+        </button>
+
+        <button onclick="navigateTo('screen-16')" id="nav-screen-16" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80">
+          <i class="fa-solid fa-location-dot w-5 text-center"></i>
+          <span>Pontos de Coleta</span>
+        </button>
+      </nav>
+
+      <div class="p-4 text-xs text-white/50">
+        Versão 3.4.1 (Produção)
+      </div>
+    </aside>
+
+    <!-- CONTENT WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="bg-white border-b border-hemo-border px-6 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex-1"></div>
+
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <button onclick="showToast('Você tem 3 requisições urgentes aguardando envio.', 'warning')" 
+              class="relative w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+              <i class="fa-regular fa-bell"></i>
+              <span class="absolute top-2 right-2 w-2 h-2 bg-hemo-coral rounded-full"></span>
+            </button>
+          </div>
+
+          <button onclick="navigateTo('screen-17')" title="Ver perfil" class="w-10 h-10 rounded-full bg-hemo-moss text-white font-bold flex items-center justify-center text-sm shadow">
+            Dr
+          </button>
+        </div>
+      </header>
+
+      <!-- SCREEN ROUTE VIEWS CONTAINER -->
+      <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+        
+        <!-- ========================================================================= -->
+        <!-- TELA 3: PAINEL DO HEMOCENTRO / INÍCIO -->
+        <!-- ========================================================================= -->
+        <div id="screen-3" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Painel do Hemocentro</h2>
+              <p class="text-sm text-hemo-textSub">Visão geral das operações de hoje</p>
+            </div>
+            <button onclick="navigateTo('screen-9')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-sm font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus text-xs"></i>
+              <span>Nova Doação</span>
+            </button>
+          </div>
+
+          <!-- 4 KPI Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- KPI 1 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-sm text-hemo-textSub">Disponíveis</p>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-3xl font-extrabold text-hemo-textMain">142</span>
+                  <span class="text-sm text-hemo-textSub">bolsas</span>
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center">
+                <i class="fa-solid fa-cube"></i>
+              </div>
+            </div>
+
+            <!-- KPI 2 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-sm text-hemo-textSub">Pendentes</p>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-3xl font-extrabold text-hemo-textMain">8</span>
+                  <span class="text-sm text-hemo-textSub">pedidos</span>
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+            </div>
+
+            <!-- KPI 3 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-sm text-hemo-textSub">Estoque Global</p>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-3xl font-extrabold text-hemo-textMain">158</span>
+                  <span class="text-sm text-hemo-textSub">bolsas</span>
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center">
+                <i class="fa-solid fa-wave-square"></i>
+              </div>
+            </div>
+
+            <!-- KPI 4 -->
+            <div class="bg-hemo-coral p-5 rounded-xl shadow-sm flex items-start justify-between text-white">
+              <div>
+                <p class="text-sm text-white/90">Urgência de Validade</p>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-3xl font-extrabold">12</span>
+                </div>
+                <p class="text-xs text-white/80 mt-1">bolsas a vencer em &lt; 48h</p>
+              </div>
+              <div class="w-10 h-10 rounded-lg bg-white/20 text-white flex items-center justify-center">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Critical Stock Alert Banner -->
+          <div class="bg-rose-50 border-l-4 border-rose-400 p-4 rounded-xl flex items-start gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5"></i>
+            <p class="text-sm text-rose-700">
+              Estoque crítico para os tipos O- e B-. Urgência de captação.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Acesso Rápido -->
+            <div>
+              <h3 class="font-bold text-hemo-textMain mb-3">Acesso Rápido</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <button onclick="navigateTo('screen-9')" class="p-4 bg-white rounded-xl border border-hemo-border hover:border-hemo-moss hover:bg-hemo-activeBg transition-all text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-plus"></i>
+                  </div>
+                  <p class="text-sm font-bold text-hemo-textMain">Nova Doação</p>
+                  <p class="text-xs text-hemo-textSub mt-0.5">Registrar coleta</p>
+                </button>
+
+                <button onclick="navigateTo('screen-7')" class="p-4 bg-white rounded-xl border border-hemo-border hover:border-hemo-moss hover:bg-hemo-activeBg transition-all text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <p class="text-sm font-bold text-hemo-textMain">Nova Bolsa</p>
+                  <p class="text-xs text-hemo-textSub mt-0.5">Entrada de material</p>
+                </button>
+
+                <button onclick="navigateTo('screen-11')" class="p-4 bg-white rounded-xl border border-hemo-border hover:border-hemo-moss hover:bg-hemo-activeBg transition-all text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-house-medical"></i>
+                  </div>
+                  <p class="text-sm font-bold text-hemo-textMain">Novo Hospital</p>
+                  <p class="text-xs text-hemo-textSub mt-0.5">Cadastrar parceiro</p>
+                </button>
+
+                <button onclick="navigateTo('screen-14')" class="p-4 bg-white rounded-xl border border-hemo-border hover:border-hemo-moss hover:bg-hemo-activeBg transition-all text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-hemo-activeBg text-hemo-moss flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-file-lines"></i>
+                  </div>
+                  <p class="text-sm font-bold text-hemo-textMain">Nova Requisição</p>
+                  <p class="text-xs text-hemo-textSub mt-0.5">Pedido de envio</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Requisições Pendentes -->
+            <div class="bg-white rounded-xl border border-hemo-border p-5">
+              <h3 class="font-bold text-hemo-textMain mb-4">Requisições Pendentes</h3>
+
+              <div class="space-y-3">
+                <div class="p-4 rounded-xl border border-hemo-border">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-hemo-textSub">#REQ-2041 &bull; Emergência</span>
+                    <span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">Aguardando Envio</span>
+                  </div>
+                  <h4 class="font-bold text-sm text-hemo-textMain mt-2">Hospital Central de Trauma</h4>
+                  <div class="flex items-center gap-2 mt-2">
+                    <span class="w-7 h-7 rounded-lg bg-hemo-activeBg text-hemo-moss text-xs font-bold flex items-center justify-center">O-</span>
+                    <p class="text-xs text-hemo-textSub">Concentrado de Hemácias &bull; 6 bolsas</p>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-hemo-border">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-hemo-textSub">#REQ-2040 &bull; Urgente</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[11px] font-bold rounded-full">Em Análise</span>
+                  </div>
+                  <h4 class="font-bold text-sm text-hemo-textMain mt-2">Incor - Instituto do Coração</h4>
+                  <div class="flex items-center gap-2 mt-2">
+                    <span class="w-7 h-7 rounded-lg bg-hemo-activeBg text-hemo-moss text-xs font-bold flex items-center justify-center">A+</span>
+                    <p class="text-xs text-hemo-textSub">Plaquetas &bull; 10 bolsas</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 4: ESTOQUE (VISÃO GERAL) -->
+        <!-- ========================================================================= -->
+        <div id="screen-4" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Estoque de Hemocomponentes</h2>
+              <p class="text-sm text-hemo-textSub">Disponibilidade atualizada por tipo sanguíneo e hemocomponente</p>
+            </div>
+            <button onclick="navigateTo('screen-5')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-list"></i>
+              <span>Ver Lista Detalhada de Bolsas</span>
+            </button>
+          </div>
+
+          <!-- Alert -->
+          <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-xs flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-circle-exclamation text-rose-600 text-xl"></i>
+              <div>
+                <p class="text-sm font-bold text-rose-900">Alerta de Estoque Crítico</p>
+                <p class="text-xs text-rose-700">Tipos O- (12 bolsas) e B- (8 bolsas) necessitam de reposição imediata.</p>
+              </div>
+            </div>
+            <button onclick="navigateTo('screen-9')" class="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg shadow-xs">
+              Agendar Captação
+            </button>
+          </div>
+
+          <!-- Main Donut & Overview Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Global Stock Chart -->
+            <div class="bg-white p-6 rounded-xl border border-hemo-border shadow-sm flex flex-col items-center justify-center">
+              <h3 class="text-sm font-bold text-hemo-textSub uppercase tracking-wider mb-4">Estoque Global: 158 Bolsas</h3>
+              <div class="relative w-48 h-48">
+                <canvas id="donutEstoqueChart"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span class="text-3xl font-extrabold text-hemo-textMain">158</span>
+                  <span class="text-xs text-hemo-textSub font-medium">Bolsas Totais</span>
+                </div>
+              </div>
+              <div class="w-full grid grid-cols-2 gap-2 mt-6 text-xs text-hemo-textSub">
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#526858]"></span> Hemácias (95)</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#D97768]"></span> Plasma (35)</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#EAB308]"></span> Plaquetas (18)</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#3B82F6]"></span> Crioprecipitado (10)</div>
+              </div>
+            </div>
+
+            <!-- Grid of Blood Types -->
+            <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <!-- Card O+ -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">O+</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Normal</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">45 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-full" style="width: 80%"></div>
+                </div>
+              </div>
+
+              <!-- Card O- -->
+              <div class="bg-rose-50/50 p-4 rounded-xl border border-rose-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-rose-700">O-</span>
+                  <span class="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full">CRÍTICO</span>
+                </div>
+                <p class="text-2xl font-bold text-rose-900 mt-2">12 <span class="text-xs font-normal text-rose-700">bolsas</span></p>
+                <div class="w-full bg-rose-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-rose-600 h-full rounded-full" style="width: 25%"></div>
+                </div>
+              </div>
+
+              <!-- Card A+ -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">A+</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Normal</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">38 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-full" style="width: 70%"></div>
+                </div>
+              </div>
+
+              <!-- Card A- -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">A-</span>
+                  <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">Atenção</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">14 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-amber-500 h-full rounded-full" style="width: 35%"></div>
+                </div>
+              </div>
+
+              <!-- Card B+ -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">B+</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Normal</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">22 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-full" style="width: 50%"></div>
+                </div>
+              </div>
+
+              <!-- Card B- -->
+              <div class="bg-rose-50/50 p-4 rounded-xl border border-rose-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-rose-700">B-</span>
+                  <span class="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full">CRÍTICO</span>
+                </div>
+                <p class="text-2xl font-bold text-rose-900 mt-2">8 <span class="text-xs font-normal text-rose-700">bolsas</span></p>
+                <div class="w-full bg-rose-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-rose-600 h-full rounded-full" style="width: 15%"></div>
+                </div>
+              </div>
+
+              <!-- Card AB+ -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">AB+</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Normal</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">11 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-full" style="width: 40%"></div>
+                </div>
+              </div>
+
+              <!-- Card AB- -->
+              <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs hover:border-hemo-moss transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="text-xl font-black text-hemo-textMain">AB-</span>
+                  <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">Atenção</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">8 <span class="text-xs font-normal text-slate-500">bolsas</span></p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                  <div class="bg-amber-500 h-full rounded-full" style="width: 20%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 5: BOLSAS EM ESTOQUE (LISTA COMPLETA) -->
+        <!-- ========================================================================= -->
+        <div id="screen-5" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Bolsas em Estoque</h2>
+              <p class="text-sm text-hemo-textSub">Gestão e rastreabilidade individualizada de cada bolsa cadastrada</p>
+            </div>
+            <button onclick="navigateTo('screen-7')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Nova Bolsa</span>
+            </button>
+          </div>
+
+          <!-- Filters Bar -->
+          <div class="bg-white p-4 rounded-xl border border-hemo-border shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <input id="stock-search" type="search" aria-label="Buscar bolsa por código" placeholder="Buscar por código (ex: BS-88371)..." class="w-full px-3 py-2 rounded-lg border border-hemo-border text-xs focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+            
+            <select id="stock-blood-filter" aria-label="Filtrar por tipo sanguíneo" class="w-full px-3 py-2 rounded-lg border border-hemo-border text-xs focus:outline-none focus:ring-1 focus:ring-hemo-moss text-hemo-textMain">
+              <option value="">Todos os Tipos Sanguíneos</option>
+              <option value="O+">O Positivo (O+)</option>
+              <option value="O-">O Negativo (O-)</option>
+              <option value="A+">A Positivo (A+)</option>
+              <option value="A-">A Negativo (A-)</option>
+              <option value="B+">B Positivo (B+)</option>
+              <option value="B-">B Negativo (B-)</option>
+              <option value="AB+">AB Positivo (AB+)</option>
+              <option value="AB-">AB Negativo (AB-)</option>
+            </select>
+
+            <select id="stock-component-filter" aria-label="Filtrar por hemocomponente" class="w-full px-3 py-2 rounded-lg border border-hemo-border text-xs focus:outline-none focus:ring-1 focus:ring-hemo-moss text-hemo-textMain">
+              <option value="">Todos os Hemocomponentes</option>
+              <option>Concentrado de Hemácias</option>
+              <option>Plasma Fresco Congelado</option>
+              <option>Plaquetas</option>
+              <option>Crioprecipitado</option>
+            </select>
+
+            <select id="stock-status-filter" aria-label="Filtrar por status" class="w-full px-3 py-2 rounded-lg border border-hemo-border text-xs focus:outline-none focus:ring-1 focus:ring-hemo-moss text-hemo-textMain">
+              <option value="">Todos os Status</option>
+              <option>Disponível</option>
+              <option>Reservado</option>
+              <option>Em Análise</option>
+            </select>
+          </div>
+
+          <p id="stock-filter-feedback" class="text-xs text-hemo-textSub" aria-live="polite"></p>
+
+          <!-- Table -->
+          <div class="bg-white rounded-xl border border-hemo-border shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-hemo-border text-hemo-textSub uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 font-bold">CÓDIGO DA BOLSA</th>
+                    <th class="p-4 font-bold">TIPO</th>
+                    <th class="p-4 font-bold">HEMOCOMPONENTE</th>
+                    <th class="p-4 font-bold">VOLUME</th>
+                    <th class="p-4 font-bold">VALIDADE</th>
+                    <th class="p-4 font-bold">LOCALIZAÇÃO</th>
+                    <th class="p-4 font-bold">STATUS</th>
+                    <th class="p-4 font-bold text-right">AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody id="stock-table-body" class="divide-y divide-hemo-border text-slate-700">
+                  <tr class="hover:bg-hemo-activeBg cursor-pointer transition-colors" onclick="navigateTo('screen-6')">
+                    <td class="p-4 font-bold text-hemo-moss">BS-88371-O</td>
+                    <td class="p-4 font-black"><span class="px-2 py-0.5 rounded bg-slate-100">O+</span></td>
+                    <td class="p-4">Concentrado de Hemácias</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4">02/12/2025</td>
+                    <td class="p-4">Câmara Fria 02</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">DISPONÍVEL</span></td>
+                    <td class="p-4 text-right">
+                      <button onclick="event.stopPropagation(); navigateTo('screen-6')" class="p-1.5 text-hemo-moss hover:bg-white rounded">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg cursor-pointer transition-colors" onclick="navigateTo('screen-6')">
+                    <td class="p-4 font-bold text-hemo-moss">BS-88372-A</td>
+                    <td class="p-4 font-black"><span class="px-2 py-0.5 rounded bg-slate-100">A-</span></td>
+                    <td class="p-4">Plasma Fresco Congelado</td>
+                    <td class="p-4">220 ml</td>
+                    <td class="p-4">15/01/2026</td>
+                    <td class="p-4">Câmara Fria 01</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">DISPONÍVEL</span></td>
+                    <td class="p-4 text-right">
+                      <button onclick="event.stopPropagation(); navigateTo('screen-6')" class="p-1.5 text-hemo-moss hover:bg-white rounded">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg cursor-pointer transition-colors" onclick="navigateTo('screen-6')">
+                    <td class="p-4 font-bold text-hemo-moss">BS-88369-O</td>
+                    <td class="p-4 font-black"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800">O-</span></td>
+                    <td class="p-4">Concentrado de Hemácias</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4 font-bold text-rose-600">29/10/2025</td>
+                    <td class="p-4">Câmara Fria 03</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">RESERVADO</span></td>
+                    <td class="p-4 text-right">
+                      <button onclick="event.stopPropagation(); navigateTo('screen-6')" class="p-1.5 text-hemo-moss hover:bg-white rounded">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg cursor-pointer transition-colors" onclick="navigateTo('screen-6')">
+                    <td class="p-4 font-bold text-hemo-moss">BS-87211-B</td>
+                    <td class="p-4 font-black"><span class="px-2 py-0.5 rounded bg-slate-100">B+</span></td>
+                    <td class="p-4">Plaquetas</td>
+                    <td class="p-4">300 ml</td>
+                    <td class="p-4">30/10/2025</td>
+                    <td class="p-4">Câmara Fria 02</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">DISPONÍVEL</span></td>
+                    <td class="p-4 text-right">
+                      <button onclick="event.stopPropagation(); navigateTo('screen-6')" class="p-1.5 text-hemo-moss hover:bg-white rounded">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="p-4 bg-slate-50 border-t border-hemo-border flex items-center justify-between text-xs text-hemo-textSub">
+              <span>Exibindo 4 de 158 bolsas ativas</span>
+              <div class="flex items-center gap-1">
+                <button class="px-2.5 py-1 rounded border border-hemo-border bg-white disabled:opacity-50" disabled>Anterior</button>
+                <button class="px-2.5 py-1 rounded border border-hemo-moss bg-hemo-moss text-white font-bold">1</button>
+                <button class="px-2.5 py-1 rounded border border-hemo-border bg-white hover:bg-slate-100">2</button>
+                <button class="px-2.5 py-1 rounded border border-hemo-border bg-white hover:bg-slate-100">Próxima</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 6: DETALHES DA BOLSA -->
+        <!-- ========================================================================= -->
+        <div id="screen-6" class="screen-view space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="navigateTo('screen-5')" class="text-xs font-bold text-hemo-moss hover:underline flex items-center gap-1.5">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Voltar para Bolsas em Estoque</span>
+            </button>
+
+            <button onclick="showToast('Modo de edição habilitado para BS-88371-O', 'info')" 
+              class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Editar Registro</span>
+            </button>
+          </div>
+
+          <!-- Header Card -->
+          <div class="bg-white p-6 rounded-xl border border-hemo-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-hemo-moss text-white flex flex-col items-center justify-center font-black">
+                <span class="text-xl leading-none">O+</span>
+                <span class="text-[9px] font-normal uppercase tracking-wider">Positivo</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-3">
+                  <h2 class="text-2xl font-bold text-hemo-textMain">Bolsa #BS-88371-O</h2>
+                  <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">DISPONÍVEL NO ESTOQUE</span>
+                </div>
+                <p class="text-xs text-hemo-textSub mt-1">Doador Referência: <span class="font-mono text-slate-700">DO-55291</span> &bull; Cadastrado em 28/10/2025</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 bg-white p-6 rounded-xl border border-hemo-border shadow-sm space-y-6">
+              <h3 class="text-sm font-bold text-hemo-textSub uppercase tracking-wider border-b border-hemo-border pb-3">Informações Clínicas & Rastreabilidade</h3>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Hemocomponente</p>
+                  <p class="font-bold text-hemo-textMain text-sm mt-0.5">Concentrado de Hemácias</p>
+                </div>
+
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Volume Coletado</p>
+                  <p class="font-bold text-hemo-textMain text-sm mt-0.5">450 ml</p>
+                </div>
+
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Data da Coleta</p>
+                  <p class="font-bold text-hemo-textMain text-sm mt-0.5">28/10/2025 às 08:30</p>
+                </div>
+
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Data de Validade</p>
+                  <p class="font-bold text-emerald-700 text-sm mt-0.5">02/12/2025 (35 dias restantes)</p>
+                </div>
+
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Localização de Armazenamento</p>
+                  <p class="font-bold text-hemo-textMain text-sm mt-0.5">Câmara Fria 02 &bull; Prateleira B3</p>
+                </div>
+
+                <div>
+                  <p class="text-slate-400 font-semibold uppercase">Anticoagulante Utilizado</p>
+                  <p class="font-bold text-hemo-textMain text-sm mt-0.5">CPDA-1</p>
+                </div>
+              </div>
+
+              <!-- Serology Status -->
+              <div class="pt-4 border-t border-hemo-border">
+                <p class="text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-3">Exames Sorológicos (Triagem Laboratorial)</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                  <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">HIV: Não Reativo</div>
+                  <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Hepatite B/C: Não Reativo</div>
+                  <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Chagas: Não Reativo</div>
+                  <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg font-bold">Sífilis: Não Reativo</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column Info -->
+            <div class="space-y-6">
+              <div class="bg-white p-6 rounded-xl border border-hemo-border shadow-sm">
+                <h3 class="text-sm font-bold text-hemo-textSub uppercase tracking-wider mb-3">Histórico de Movimentações</h3>
+                <div class="space-y-4 text-xs">
+                  <div class="border-l-2 border-hemo-moss pl-3 py-0.5">
+                    <p class="font-bold text-slate-800">Entrada no Estoque</p>
+                    <p class="text-slate-500">28/10/2025 - 11:20 por Dr. Carlos</p>
+                  </div>
+                  <div class="border-l-2 border-slate-300 pl-3 py-0.5">
+                    <p class="font-bold text-slate-800">Sorologia Aprovada</p>
+                    <p class="text-slate-500">28/10/2025 - 10:45 pelo Lab Central</p>
+                  </div>
+                  <div class="border-l-2 border-slate-300 pl-3 py-0.5">
+                    <p class="font-bold text-slate-800">Coleta Efetuada</p>
+                    <p class="text-slate-500">28/10/2025 - 08:30 no Posto Centro</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 7: NOVA BOLSA (CADASTRO) -->
+        <!-- ========================================================================= -->
+        <div id="screen-7" class="screen-view max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Cadastrar Nova Bolsa</h2>
+              <p class="text-sm text-hemo-textSub">Registre uma bolsa processada no sistema para disponibilidade</p>
+            </div>
+            <button onclick="navigateTo('screen-5')" class="text-xs text-hemo-textSub hover:underline">Cancelar</button>
+          </div>
+
+          <form onsubmit="handleNewBag(event)" class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Código da Bolsa</label>
+                <input type="text" value="BS-88375-O" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-mono font-bold text-hemo-moss bg-slate-50 focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Código da Doação Relacionada</label>
+                <input type="text" value="DO-55291" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-mono text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Hemocomponente</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+                  <option selected>Concentrado de Hemácias</option>
+                  <option>Plasma Fresco Congelado</option>
+                  <option>Plaquetas</option>
+                  <option>Crioprecipitado</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Tipo Sanguíneo</label>
+                  <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-bold text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+                    <option selected>O</option>
+                    <option>A</option>
+                    <option>B</option>
+                    <option>AB</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Fator Rh</label>
+                  <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-bold text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+                    <option selected>+</option>
+                    <option>-</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Volume (ml)</label>
+                <input type="number" value="450" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Câmara Fria de Destino</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+                  <option>Câmara Fria 01</option>
+                  <option selected>Câmara Fria 02</option>
+                  <option>Câmara Fria 03</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Data da Coleta</label>
+                <input type="date" value="2025-10-28" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Data de Validade</label>
+                <input type="date" value="2025-12-02" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-hemo-border flex items-center justify-end gap-3">
+              <button type="button" onclick="navigateTo('screen-5')" class="px-4 py-2 border border-hemo-border text-hemo-textSub text-xs font-bold rounded-lg hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button type="submit" class="px-6 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">
+                Cadastrar Bolsa
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 8: DOAÇÕES RECEBIDAS -->
+        <!-- ========================================================================= -->
+        <div id="screen-8" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Doações Recebidas</h2>
+              <p class="text-sm text-hemo-textSub">Histórico de triagem e coletas efetuadas em postos fixos e móveis</p>
+            </div>
+            <button onclick="navigateTo('screen-9')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Nova Doação</span>
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="bg-white rounded-xl border border-hemo-border shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-hemo-border flex flex-col sm:flex-row items-center gap-3">
+              <input type="text" placeholder="Buscar doação por código ou doador..." class="w-full sm:w-80 px-3 py-2 rounded-lg border border-hemo-border text-xs focus:outline-none focus:ring-1 focus:ring-hemo-moss">
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-hemo-border text-hemo-textSub uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 font-bold">CÓDIGO DOAÇÃO</th>
+                    <th class="p-4 font-bold">DATA / HORA</th>
+                    <th class="p-4 font-bold">TIPO/RH</th>
+                    <th class="p-4 font-bold">VOLUME</th>
+                    <th class="p-4 font-bold">PONTO DE COLETA</th>
+                    <th class="p-4 font-bold">STATUS SOROLOGIA</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-hemo-border text-slate-700">
+                  <tr class="hover:bg-hemo-activeBg">
+                    <td class="p-4 font-bold text-hemo-moss">DO-55291</td>
+                    <td class="p-4">28/10/2025 08:30</td>
+                    <td class="p-4 font-bold">O+</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4">Unidade Móvel A - Centro</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold">Aprovado</span></td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg">
+                    <td class="p-4 font-bold text-hemo-moss">DO-55288</td>
+                    <td class="p-4">28/10/2025 09:15</td>
+                    <td class="p-4 font-bold">A-</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4">Posto Fixo Metrô Ana Rosa</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full font-bold">Em Análise</span></td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg">
+                    <td class="p-4 font-bold text-hemo-moss">DO-55271</td>
+                    <td class="p-4">27/10/2025 14:20</td>
+                    <td class="p-4 font-bold">O-</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4">Unidade Móvel A - Centro</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold">Aprovado</span></td>
+                  </tr>
+
+                  <tr class="hover:bg-hemo-activeBg">
+                    <td class="p-4 font-bold text-hemo-moss">DO-55260</td>
+                    <td class="p-4">27/10/2025 11:00</td>
+                    <td class="p-4 font-bold">B+</td>
+                    <td class="p-4">450 ml</td>
+                    <td class="p-4">Shopping Eldorado</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold">Aprovado</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 9: NOVA DOAÇÃO (REGISTRO) -->
+        <!-- ========================================================================= -->
+        <div id="screen-9" class="screen-view max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Nova Doação</h2>
+              <p class="text-sm text-hemo-textSub">Registrar triagem e coleta realizada</p>
+            </div>
+            <button onclick="navigateTo('screen-8')" class="text-xs text-hemo-textSub hover:underline">Cancelar</button>
+          </div>
+
+          <form onsubmit="handleNewDonation(event)" class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Código da Doação</label>
+                <input type="text" value="DO-55295" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-mono font-bold text-hemo-moss bg-slate-50 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Data e Hora da Coleta</label>
+                <input type="text" value="28/10/2025 08:30" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain focus:outline-none">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Tipo Sanguíneo</label>
+                  <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-bold text-hemo-textMain">
+                    <option selected>Tipo O</option>
+                    <option>Tipo A</option>
+                    <option>Tipo B</option>
+                    <option>Tipo AB</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Fator Rh</label>
+                  <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-bold text-hemo-textMain">
+                    <option selected>Rh +</option>
+                    <option>Rh -</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Volume Coletado</label>
+                <input type="text" value="450ml" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Unidade / Ponto de Coleta</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+                  <option selected>Unidade Móvel A - Centro</option>
+                  <option>Posto Fixo Metrô Ana Rosa</option>
+                  <option>Unidade Móvel Shopping Eldorado</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Status Inicial</label>
+                <input type="text" value="Status Coletado - Aguardando Análise" readonly
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-semibold text-amber-800 bg-amber-50">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Observações Clínicas</label>
+                <textarea rows="3" class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain" placeholder="Sinais vitais do doador normais, doação realizada em 8 minutos sem intercorrências."></textarea>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-hemo-border flex items-center justify-end gap-3">
+              <button type="button" onclick="navigateTo('screen-8')" class="px-4 py-2 border border-hemo-border text-hemo-textSub text-xs font-bold rounded-lg hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button type="submit" class="px-6 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">
+                Registrar Coleta
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 10: HOSPITAIS -->
+        <!-- ========================================================================= -->
+        <div id="screen-10" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Hospitais & Parceiros</h2>
+              <p class="text-sm text-hemo-textSub">Rede hospitalar autorizada a solicitar bolsas e hemocomponentes</p>
+            </div>
+            <button onclick="navigateTo('screen-11')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Novo Hospital</span>
+            </button>
+          </div>
+
+          <!-- Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Hosp 1 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between">
+                  <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-hospital"></i>
+                  </div>
+                  <span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Ativo</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Hospital Central de Trauma</h3>
+                <p class="text-xs text-hemo-textSub mt-1">CNPJ: 12.345.678/0001-90</p>
+                <p class="text-xs text-hemo-textSub">Tel: (11) 3344-5500</p>
+
+                <div class="mt-4 pt-3 border-t border-hemo-border">
+                  <span class="px-2.5 py-1 bg-rose-100 text-rose-800 font-bold text-xs rounded-md">3 Requisições Abertas</span>
+                </div>
+              </div>
+
+              <button onclick="navigateTo('screen-12')" class="w-full mt-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Histórico
+              </button>
+            </div>
+
+            <!-- Hosp 2 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between">
+                  <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-hospital"></i>
+                  </div>
+                  <span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Ativo</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Incor - Instituto do Coração</h3>
+                <p class="text-xs text-hemo-textSub mt-1">CNPJ: 98.765.432/0001-10</p>
+                <p class="text-xs text-hemo-textSub">Tel: (11) 2661-0000</p>
+
+                <div class="mt-4 pt-3 border-t border-hemo-border">
+                  <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-md">1 Requisição Aberta</span>
+                </div>
+              </div>
+
+              <button onclick="navigateTo('screen-12')" class="w-full mt-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Histórico
+              </button>
+            </div>
+
+            <!-- Hosp 3 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between">
+                  <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-hospital"></i>
+                  </div>
+                  <span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Ativo</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Santa Casa de Misericórdia</h3>
+                <p class="text-xs text-hemo-textSub mt-1">CNPJ: 45.678.910/0001-55</p>
+                <p class="text-xs text-hemo-textSub">Tel: (11) 2176-7000</p>
+
+                <div class="mt-4 pt-3 border-t border-hemo-border">
+                  <span class="px-2.5 py-1 bg-slate-100 text-slate-600 font-bold text-xs rounded-md">Nenhuma Requisição Pendente</span>
+                </div>
+              </div>
+
+              <button onclick="navigateTo('screen-12')" class="w-full mt-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Histórico
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 11: NOVO HOSPITAL -->
+        <!-- ========================================================================= -->
+        <div id="screen-11" class="screen-view max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Cadastrar Novo Hospital</h2>
+              <p class="text-sm text-hemo-textSub">Adicionar uma nova instituição de saúde parceira</p>
+            </div>
+            <button onclick="navigateTo('screen-10')" class="text-xs text-hemo-textSub hover:underline">Cancelar</button>
+          </div>
+
+          <form onsubmit="handleNewHospital(event)" class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Nome da Instituição Hospitalar</label>
+                <input type="text" placeholder="Ex: Hospital São Luiz" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">CNPJ</label>
+                <input type="text" placeholder="00.000.000/0001-00" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Telefone de Emergência</label>
+                <input type="text" placeholder="(11) 99999-0000" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Nome do Contato Responsável</label>
+                <input type="text" placeholder="Dr. André Silva" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">E-mail Institucional</label>
+                <input type="email" placeholder="agencia@hospital.com.br" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div class="sm:col-span-2 bg-slate-50 p-4 rounded-xl border border-hemo-border flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold text-hemo-textMain">Possui Agência Transfusional Própria?</p>
+                  <p class="text-xs text-hemo-textSub">Define o modelo de armazenamento e envio direto</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-hemo-moss"></div>
+                </label>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Endereço Completo</label>
+                <input type="text" placeholder="Rua, Número, Bairro, CEP - Cidade / UF" required
+                  class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-hemo-border flex items-center justify-end gap-3">
+              <button type="button" onclick="navigateTo('screen-10')" class="px-4 py-2 border border-hemo-border text-hemo-textSub text-xs font-bold rounded-lg hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button type="submit" class="px-6 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">
+                Cadastrar Hospital
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 12: REQUIÇÕES -->
+        <!-- ========================================================================= -->
+        <div id="screen-12" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Requisições de Sangue</h2>
+              <p class="text-sm text-hemo-textSub">Gerencie solicitações de hospitais e despachos operacionais</p>
+            </div>
+            <button onclick="navigateTo('screen-14')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Nova Requisição</span>
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="border-b border-hemo-border flex items-center gap-6 text-xs font-bold" role="tablist" aria-label="Status das requisições">
+            <button type="button" data-request-filter="pending" role="tab" aria-selected="true" class="request-filter pb-3 border-b-2 border-hemo-moss text-hemo-moss flex items-center gap-2">
+              <span>Pendentes</span>
+              <span class="px-2 py-0.5 bg-hemo-coral text-white rounded-full text-[10px]">2</span>
+            </button>
+            <button type="button" data-request-filter="shipping" role="tab" aria-selected="false" class="request-filter pb-3 text-hemo-textSub hover:text-hemo-textMain">Em Envio (2)</button>
+            <button type="button" data-request-filter="completed" role="tab" aria-selected="false" class="request-filter pb-3 text-hemo-textSub hover:text-hemo-textMain">Concluídas (48)</button>
+          </div>
+
+          <!-- Cards List -->
+          <div id="requests-list" class="space-y-4">
+            <!-- Item 1 -->
+            <div data-request-status="pending" class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-3">
+                  <span class="px-2.5 py-0.5 bg-rose-600 text-white text-xs font-bold rounded">EMERGÊNCIA</span>
+                  <span class="font-bold text-hemo-textMain">#REQ-2041</span>
+                  <span class="text-xs text-hemo-textSub">&bull; Hospital Central de Trauma</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800 mt-2">
+                  Solicitado: 2 Bolsas Concentrado de Hemácias <span class="text-rose-600 font-extrabold">(Tipo O-)</span>
+                </p>
+                <p class="text-xs text-slate-500">Prazo limite de entrega: <span class="font-bold text-slate-700">Hoje até 19:00</span></p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button onclick="navigateTo('screen-13')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">
+                  Alocar Bolsa
+                </button>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div data-request-status="pending" class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-3">
+                  <span class="px-2.5 py-0.5 bg-amber-500 text-white text-xs font-bold rounded">URGENTE</span>
+                  <span class="font-bold text-hemo-textMain">#REQ-2040</span>
+                  <span class="text-xs text-hemo-textSub">&bull; Incor - Instituto do Coração</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800 mt-2">
+                  Solicitado: 1 Bolsa Plasma Fresco Congelado <span class="text-blue-600 font-extrabold">(Tipo A+)</span>
+                </p>
+                <p class="text-xs text-slate-500">Prazo limite de entrega: <span class="font-bold text-slate-700">Amanhã 08:00</span></p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button onclick="showToast('Alocação iniciada para REQ-2040', 'info')" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm">
+                  Alocar Bolsa
+                </button>
+              </div>
+            </div>
+            <p id="requests-empty-state" class="hidden rounded-xl border border-hemo-border bg-white p-6 text-center text-sm text-hemo-textSub" aria-live="polite">
+              Nenhuma requisição desta categoria está disponível nesta demonstração.
+            </p>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 13: ALOCAÇÃO DE HEMOCOMPONENTES -->
+        <!-- ========================================================================= -->
+        <div id="screen-13" class="screen-view max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="navigateTo('screen-12')" class="text-xs font-bold text-hemo-moss hover:underline flex items-center gap-1">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Voltar para Requisições</span>
+            </button>
+            <span class="text-xs font-mono font-bold bg-rose-100 text-rose-800 px-3 py-1 rounded-full">PRIORIDADE CRÍTICA</span>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-6">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Alocação de Bolsas #REQ-2041</h2>
+              <p class="text-xs text-hemo-textSub mt-1">Solicitante: <span class="font-bold text-slate-700">Hospital Central de Trauma</span> &bull; Necessidade: <span class="font-bold text-rose-600">Concentrado de Hemácias (O-)</span></p>
+            </div>
+
+            <!-- Recommendation Alert -->
+            <div class="bg-[#EEF2EF] p-5 rounded-xl border border-hemo-moss/30 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-hemo-moss uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  Bolsa Recomendada pelo Sistema
+                </span>
+                <span class="px-2.5 py-0.5 bg-amber-500 text-white text-[10px] font-extrabold rounded-full">MENOR VALIDADE</span>
+              </div>
+
+              <div class="bg-white p-4 rounded-lg border border-hemo-border flex items-center justify-between">
+                <div>
+                  <span class="font-bold text-hemo-moss text-base">BS-88369-O</span>
+                  <p class="text-xs text-slate-600 font-medium">Tipo: O- &bull; Vol: 450ml &bull; Câmara Fria 03</p>
+                  <p class="text-xs text-rose-600 font-bold mt-1">Vence em: 29/10/2025 (1 dia restante)</p>
+                </div>
+                <i class="fa-solid fa-circle-check text-emerald-600 text-2xl"></i>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-hemo-border flex items-center justify-between">
+              <button onclick="showToast('Seleção manual ativada', 'info')" class="text-xs text-hemo-textSub hover:underline font-medium">
+                Trocar Bolsa Manualmente
+              </button>
+              
+              <button onclick="confirmAllocation()" class="px-6 py-2.5 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-truck-ramp-box"></i>
+                <span>Confirmar Alocação</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 14: NOVA REQUIÇÃO -->
+        <!-- ========================================================================= -->
+        <div id="screen-14" class="screen-view max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Criar Nova Requisição</h2>
+              <p class="text-sm text-hemo-textSub">Registrar pedido formal de hospital parceiro</p>
+            </div>
+            <button onclick="navigateTo('screen-12')" class="text-xs text-hemo-textSub hover:underline">Cancelar</button>
+          </div>
+
+          <form onsubmit="handleNewRequest(event)" class="bg-white p-6 rounded-2xl border border-hemo-border shadow-sm space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Hospital Solicitante</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+                  <option selected>Hospital Central de Trauma</option>
+                  <option>Incor - Instituto do Coração</option>
+                  <option>Santa Casa de Misericórdia</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Hemocomponente</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+                  <option selected>Concentrado de Hemácias</option>
+                  <option>Plasma Fresco Congelado</option>
+                  <option>Plaquetas</option>
+                  <option>Crioprecipitado</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Tipo Sanguíneo Requerido</label>
+                <select class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm font-bold text-hemo-textMain">
+                  <option selected>O-</option>
+                  <option>O+</option>
+                  <option>A-</option>
+                  <option>A+</option>
+                  <option>B-</option>
+                  <option>B+</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Quantidade de Bolsas</label>
+                <input type="number" min="1" value="2" required class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Prazo Limite de Entrega</label>
+                <input type="datetime-local" required class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-2">Nível de Prioridade</label>
+                <div class="grid grid-cols-3 gap-3">
+                  <label class="p-3 border border-hemo-border rounded-lg flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                    <input type="radio" name="priority" value="normal" class="text-hemo-moss focus:ring-hemo-moss">
+                    <span class="text-xs font-bold text-slate-700">Normal</span>
+                  </label>
+                  <label class="p-3 border border-amber-200 bg-amber-50/50 rounded-lg flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="priority" value="urgente" class="text-amber-600 focus:ring-amber-500">
+                    <span class="text-xs font-bold text-amber-800">Urgente</span>
+                  </label>
+                  <label class="p-3 border border-rose-200 bg-rose-50/50 rounded-lg flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="priority" value="emergencia" checked class="text-rose-600 focus:ring-rose-500">
+                    <span class="text-xs font-bold text-rose-800">Emergência</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-hemo-textSub uppercase tracking-wider mb-1">Observações / Justificativa Médica</label>
+                <textarea rows="3" class="w-full px-3 py-2 rounded-lg border border-hemo-border text-sm text-hemo-textMain" placeholder="Informe o setor solicitante (UTI, Centro Cirúrgico, etc)..."></textarea>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-hemo-border flex items-center justify-end gap-3">
+              <button type="button" onclick="navigateTo('screen-12')" class="px-4 py-2 border border-hemo-border text-hemo-textSub text-xs font-bold rounded-lg hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button type="submit" class="px-6 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm">
+                Enviar Requisição
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 15: MAPA DE COBERTURA -->
+        <!-- ========================================================================= -->
+        <div id="screen-15" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Mapa de Cobertura</h2>
+              <p class="text-sm text-hemo-textSub">Mapeamento geográfico de postos de coleta, hemocentros e hospitais</p>
+            </div>
+
+            <!-- Filters Toggles -->
+            <div class="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-hemo-border text-xs">
+              <label class="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 font-semibold cursor-pointer">
+                <input type="checkbox" data-map-filter="collection" checked class="rounded text-hemo-moss"> Coleta
+              </label>
+              <label class="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 font-semibold cursor-pointer">
+                <input type="checkbox" data-map-filter="hemocenters" checked class="rounded text-hemo-moss"> Hemocentros
+              </label>
+              <label class="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 font-semibold cursor-pointer">
+                <input type="checkbox" data-map-filter="hospitals" checked class="rounded text-hemo-moss"> Hospitais
+              </label>
+            </div>
+          </div>
+
+          <!-- Interactive Graphic Map Canvas Container -->
+          <div class="relative w-full h-[450px] bg-slate-200 rounded-2xl border border-hemo-border overflow-hidden shadow-inner flex items-center justify-center">
+            
+            <!-- Map Background SVG Grid Mock -->
+            <svg class="absolute inset-0 w-full h-full text-slate-300" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="#e2e8f0" />
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              <!-- River mock -->
+              <path d="M 0 150 Q 250 200, 500 120 T 1000 300" fill="none" stroke="#CBD5E1" stroke-width="24" />
+            </svg>
+
+            <!-- Map Pin 1: Metrô Ana Rosa -->
+            <div data-map-type="collection" class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-10">
+              <div class="relative">
+                <div class="w-8 h-8 rounded-full bg-hemo-moss text-white flex items-center justify-center shadow-lg border-2 border-white transform hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-ping"></span>
+              </div>
+            </div>
+
+            <!-- Map Pin 2: Eldorado -->
+            <div data-map-type="collection" class="absolute top-1/4 left-1/4 group cursor-pointer">
+              <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md border-2 border-white">
+                <i class="fa-solid fa-truck"></i>
+              </div>
+            </div>
+
+            <!-- Map Pin 3: Hospital Central -->
+            <div data-map-type="hospitals" class="absolute bottom-1/3 right-1/3 group cursor-pointer">
+              <div class="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md border-2 border-white">
+                <i class="fa-solid fa-hospital"></i>
+              </div>
+            </div>
+
+            <!-- Floating Selected Card Overlay -->
+            <div class="absolute bottom-5 left-5 right-5 sm:right-auto sm:w-96 bg-white p-4 rounded-xl border border-hemo-border shadow-xl z-20 space-y-3">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-hemo-moss">Posto Fixo de Coleta</span>
+                  <h4 class="font-bold text-hemo-textMain">Ponto de Coleta - Metrô Ana Rosa</h4>
+                </div>
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">Aberto</span>
+              </div>
+
+              <p class="text-xs text-hemo-textSub">Estação Ana Rosa do Metrô, Linha Azul/Verde - SP</p>
+
+              <div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-xs text-amber-900 font-medium">
+                ⚠️ Alerta: Estoque O- e A- abaixo da meta local!
+              </div>
+
+              <div class="flex items-center justify-end">
+                <button onclick="navigateTo('screen-16')" class="text-xs font-bold text-hemo-moss hover:underline">
+                  Ver Detalhes do Ponto &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 16: PONTOS DE COLETA -->
+        <!-- ========================================================================= -->
+        <div id="screen-16" class="screen-view space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-hemo-textMain">Pontos de Coleta</h2>
+              <p class="text-sm text-hemo-textSub">Gestão de unidades fixas, móveis e campanhas temporárias</p>
+            </div>
+            <button onclick="showToast('Formulário de novo ponto de coleta aberto', 'info')" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Novo Ponto de Coleta</span>
+            </button>
+          </div>
+
+          <!-- Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Card 1 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 bg-purple-100 text-purple-800 text-[10px] font-bold rounded-full">Unidade Móvel</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Ativo</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Unidade Móvel Shopping Eldorado</h3>
+                <p class="text-xs text-hemo-textSub mt-1">Av. Rebouças, 3970 - Pinheiros</p>
+                <p class="text-xs font-semibold text-slate-700 mt-2">Capacidade: 50 doações/dia</p>
+              </div>
+
+              <button onclick="navigateTo('screen-8')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Doações Desta Unidade
+              </button>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full">Posto Fixo</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Ativo</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Posto Fixo Metrô Ana Rosa</h3>
+                <p class="text-xs text-hemo-textSub mt-1">Estação Ana Rosa - Vila Mariana</p>
+                <p class="text-xs font-semibold text-slate-700 mt-2">Capacidade: 120 doações/dia</p>
+              </div>
+
+              <button onclick="navigateTo('screen-8')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Doações Desta Unidade
+              </button>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white p-5 rounded-xl border border-hemo-border shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">Evento Temporário</span>
+                  <span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full">Programado</span>
+                </div>
+
+                <h3 class="font-bold text-hemo-textMain mt-3">Unidade Temporária Parque Ibirapuera</h3>
+                <p class="text-xs text-hemo-textSub mt-1">Portão 3 - Parque Ibirapuera</p>
+                <p class="text-xs font-semibold text-slate-700 mt-2">Capacidade: 80 doações/dia</p>
+              </div>
+
+              <button onclick="navigateTo('screen-8')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                Ver Doações Desta Unidade
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TELA 17: PERFIL DO USUÁRIO -->
+        <!-- ========================================================================= -->
+        <div id="screen-17" class="screen-view max-w-2xl mx-auto space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold text-hemo-textMain">Perfil</h2>
+            <p class="text-sm text-hemo-textSub">Seus dados de acesso ao HemoFlash</p>
+          </div>
+
+          <div class="bg-white rounded-xl border border-hemo-border p-6 shadow-sm">
+            <div class="flex items-center gap-4 pb-6 border-b border-hemo-border">
+              <div class="w-16 h-16 rounded-full bg-hemo-moss text-white font-bold flex items-center justify-center text-xl shadow">
+                Dr
+              </div>
+              <div>
+                <h3 class="font-bold text-hemo-textMain">Coordenação Central</h3>
+                <p class="text-sm text-hemo-textSub">coordenacao@hemoflash.org</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-6">
+              <div>
+                <p class="text-xs font-bold text-hemo-textSub uppercase tracking-wider">Nome</p>
+                <p class="text-sm text-hemo-textMain mt-1">Coordenação Central</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-hemo-textSub uppercase tracking-wider">E-mail profissional</p>
+                <p class="text-sm text-hemo-textMain mt-1">coordenacao@hemoflash.org</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-hemo-textSub uppercase tracking-wider">Função</p>
+                <p class="text-sm text-hemo-textMain mt-1">Coordenador(a) de Hemocentro</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-hemo-textSub uppercase tracking-wider">Unidade</p>
+                <p class="text-sm text-hemo-textMain mt-1">Hemocentro São Paulo - Matriz</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl border border-hemo-border p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-hemo-textMain">Sair do sistema</h4>
+              <p class="text-xs text-hemo-textSub mt-0.5">Encerrar esta sessão do HemoFlash</p>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-bold rounded-lg transition-colors flex items-center gap-2">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP STATE & NAVIGATION CONTROLLER -->
+  <script>
+    let donutChartInstance = null;
+
+    // NAVIGATION ROUTER FUNCTION
+    function navigateTo(screenId) {
+      const targetScreen = document.getElementById(screenId);
+      if (!targetScreen) {
+        console.error(`Tela não encontrada: ${screenId}`);
+        showToast('Não foi possível abrir esta tela.', 'warning');
+        return;
+      }
+
+      // Hide all screen views
+      const screens = document.querySelectorAll('.screen-view');
+      screens.forEach(s => s.classList.remove('active'));
+
+      // Auth vs App Layout Toggle
+      const authLayout = document.getElementById('auth-layout');
+      const mainLayout = document.getElementById('main-layout');
+
+      if (screenId === 'screen-1' || screenId === 'screen-2') {
+        authLayout.style.display = 'flex';
+        mainLayout.style.display = 'none';
+      } else {
+        authLayout.style.display = 'none';
+        mainLayout.style.display = 'flex';
+      }
+
+      // Show requested target screen
+      targetScreen.classList.add('active');
+      // Update active sidebar nav link style.
+      // Sub-screens (detalhes, formulários de cadastro, alocação) herdam o
+      // destaque do item de menu da seção a que pertencem.
+      const sectionMap = {
+        'screen-3': 'screen-3',
+        'screen-4': 'screen-4',
+        'screen-5': 'screen-5',
+        'screen-6': 'screen-5',
+        'screen-7': 'screen-5',
+        'screen-8': 'screen-8',
+        'screen-9': 'screen-8',
+        'screen-10': 'screen-10',
+        'screen-11': 'screen-10',
+        'screen-12': 'screen-12',
+        'screen-13': 'screen-12',
+        'screen-14': 'screen-12',
+        'screen-15': 'screen-15',
+        'screen-16': 'screen-16'
+      };
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+      sidebarLinks.forEach(link => link.classList.remove('active'));
+      const sectionScreenId = sectionMap[screenId];
+      const activeNav = sectionScreenId ? document.getElementById('nav-' + sectionScreenId) : null;
+      if (activeNav) {
+        activeNav.classList.add('active');
+      }
+
+      // Initialize Donut Chart if entering Screen 4
+      if (screenId === 'screen-4') {
+        setTimeout(initDonutChart, 100);
+      }
+
+      window.scrollTo(0, 0);
+    }
+
+    function normalizeFilterValue(value) {
+      return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function filterStock() {
+      const search = normalizeFilterValue(document.getElementById('stock-search').value);
+      const bloodType = normalizeFilterValue(document.getElementById('stock-blood-filter').value);
+      const component = normalizeFilterValue(document.getElementById('stock-component-filter').value);
+      const status = normalizeFilterValue(document.getElementById('stock-status-filter').value);
+      const rows = Array.from(document.querySelectorAll('#stock-table-body tr'));
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const matches = normalizeFilterValue(row.cells[0].textContent).includes(search)
+          && normalizeFilterValue(row.cells[1].textContent).includes(bloodType)
+          && normalizeFilterValue(row.cells[2].textContent).includes(component)
+          && normalizeFilterValue(row.cells[6].textContent).includes(status);
+        row.hidden = !matches;
+        if (matches) visibleCount += 1;
+      });
+
+      const feedback = document.getElementById('stock-filter-feedback');
+      feedback.textContent = visibleCount
+        ? `${visibleCount} ${visibleCount === 1 ? 'bolsa encontrada' : 'bolsas encontradas'}.`
+        : 'Nenhuma bolsa corresponde aos filtros selecionados.';
+    }
+
+    function filterRequests(status, selectedTab) {
+      document.querySelectorAll('.request-filter').forEach(tab => {
+        const isSelected = tab === selectedTab;
+        tab.setAttribute('aria-selected', String(isSelected));
+        tab.classList.toggle('border-b-2', isSelected);
+        tab.classList.toggle('border-hemo-moss', isSelected);
+        tab.classList.toggle('text-hemo-moss', isSelected);
+        tab.classList.toggle('text-hemo-textSub', !isSelected);
+      });
+
+      const requests = document.querySelectorAll('#requests-list [data-request-status]');
+      let visibleCount = 0;
+      requests.forEach(request => {
+        const isVisible = request.dataset.requestStatus === status;
+        request.classList.toggle('hidden', !isVisible);
+        if (isVisible) visibleCount += 1;
+      });
+      document.getElementById('requests-empty-state').classList.toggle('hidden', visibleCount > 0);
+    }
+
+    function filterMapMarkers() {
+      const enabledTypes = new Set(
+        Array.from(document.querySelectorAll('[data-map-filter]:checked'))
+          .map(checkbox => checkbox.dataset.mapFilter)
+      );
+      document.querySelectorAll('[data-map-type]').forEach(marker => {
+        marker.hidden = !enabledTypes.has(marker.dataset.mapType);
+      });
+    }
+
+    // LOGIN HANDLER
+    function handleLogin(e) {
+      e.preventDefault();
+      showToast('Autenticado com sucesso! Bem-vindo.', 'success');
+      navigateTo('screen-3');
+    }
+
+    // REGISTER HANDLER
+    function handleRegister(e) {
+      e.preventDefault();
+      const [password, confirmation] = e.currentTarget.querySelectorAll('input[type="password"]');
+      if (password.value !== confirmation.value) {
+        confirmation.setCustomValidity('As senhas precisam ser iguais.');
+        confirmation.reportValidity();
+        return;
+      }
+      confirmation.setCustomValidity('');
+      showToast('Conta cadastrada com sucesso! Faça seu login.', 'success');
+      navigateTo('screen-1');
+    }
+
+    // LOGOUT
+    function logout() {
+      showToast('Sessão encerrada com segurança.', 'info');
+      navigateTo('screen-1');
+    }
+
+    // FORM HANDLERS WITH TOAST FEEDBACK
+    function handleNewBag(e) {
+      e.preventDefault();
+      showToast('Nova bolsa BS-88375-O cadastrada no estoque com sucesso!', 'success');
+      navigateTo('screen-5');
+    }
+
+    function handleNewDonation(e) {
+      e.preventDefault();
+      showToast('Registro de coleta DO-55295 salvo e encaminhado para triagem.', 'success');
+      navigateTo('screen-8');
+    }
+
+    function handleNewHospital(e) {
+      e.preventDefault();
+      showToast('Hospital parceiro registrado com sucesso na rede.', 'success');
+      navigateTo('screen-10');
+    }
+
+    function handleNewRequest(e) {
+      e.preventDefault();
+      showToast('Requisição criada e enviada para a fila de alocação.', 'success');
+      navigateTo('screen-12');
+    }
+
+    function confirmAllocation() {
+      showToast('Bolsa BS-88369-O alocada para REQ-2041 e enviada para expedição!', 'success');
+      navigateTo('screen-12');
+    }
+
+    // TOAST NOTIFICATION SYSTEM
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let bgClass = 'bg-slate-900 text-white';
+      let icon = '<i class="fa-solid fa-circle-info text-blue-400"></i>';
+
+      if (type === 'success') {
+        bgClass = 'bg-slate-900 text-white border-l-4 border-emerald-500';
+        icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+      } else if (type === 'warning') {
+        bgClass = 'bg-slate-900 text-white border-l-4 border-amber-500';
+        icon = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
+      }
+
+      toast.className = `p-4 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+      toast.innerHTML = `${icon} <span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // CHART.JS INITIALIZATION FOR SCREEN 4
+    function initDonutChart() {
+      const ctx = document.getElementById('donutEstoqueChart');
+      if (!ctx) return;
+      if (typeof Chart === 'undefined') {
+        showToast('Não foi possível carregar o gráfico. Verifique sua conexão com a internet.', 'warning');
+        return;
+      }
+
+      if (donutChartInstance) {
+        donutChartInstance.destroy();
+      }
+
+      donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Concentrado de Hemácias', 'Plasma Fresco', 'Plaquetas', 'Crioprecipitado'],
+          datasets: [{
+            data: [95, 35, 18, 10],
+            backgroundColor: ['#526858', '#D97768', '#EAB308', '#3B82F6'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          cutout: '75%'
+        }
+      });
+    }
+
+    // INITIALIZE APP ON LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('stock-search').addEventListener('input', filterStock);
+      document.getElementById('stock-blood-filter').addEventListener('change', filterStock);
+      document.getElementById('stock-component-filter').addEventListener('change', filterStock);
+      document.getElementById('stock-status-filter').addEventListener('change', filterStock);
+      filterStock();
+
+      document.querySelectorAll('.request-filter').forEach(tab => {
+        tab.addEventListener('click', () => filterRequests(tab.dataset.requestFilter, tab));
+      });
+      document.querySelectorAll('#screen-2 input[type="password"]').item(1)
+        .addEventListener('input', event => event.currentTarget.setCustomValidity(''));
+      document.querySelectorAll('[data-map-filter]').forEach(checkbox => {
+        checkbox.addEventListener('change', filterMapMarkers);
+      });
+
+      // Default screen is Login (Screen 1)
+      navigateTo('screen-1');
+    });
+  </script>
+</body>
+</html>
