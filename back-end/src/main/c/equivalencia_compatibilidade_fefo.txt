@@ -1,0 +1,90 @@
+DOCUMENTO DE EQUIVALENCIA - COMPATIBILIDADE ABO/RH E PRIORIDADE FEFO
+
+Este documento descreve a correspondencia entre as implementacoes em Java e em C
+para as duas regras de negocio que foram desenvolvidas na entrega atual:
+compatibilidade ABO/Rh e priorizacao FEFO (First Expired, First Out).
+
+A finalidade deste texto e evidenciar que, embora a sintaxe das linguagens seja
+diferente, a logica aplicada e a mesma. Em Java, as regras ficam encapsuladas em
+classes e metodos; em C, elas sao representadas por funcoes e estruturas de
+dados. A ideia central e preservar a semântica da regra de negocio ao adaptar a
+solucao para a linguagem C.
+
+1. COMPATIBILIDADE ABO/RH
+
+Na versao Java, a compatibilidade e verificada pela classe
+CompatibilidadeABOService. Ela recebe o tipo sanguineo do receptor e o tipo
+sanguineo do doador e retorna verdadeiro quando a doacao e considerada compatível,
+conforme a matriz de compatibilidade ABO/Rh para hemacias.
+
+Na versao em C, a mesma regra e implementada por uma funcao equivalente, que
+normaliza os valores de entrada, identifica os indices dos tipos sanguineos e
+consultam a matriz fixa de compatibilidade. A matriz e a mesma em ambas as
+versoes, e o seu objetivo e manter a mesma tabela de decisao para cada receptor.
+
+A ordem dos tipos usada na matriz e a seguinte:
+"O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+".
+
+Essa representacao garante que a decisao seja consistente para todas as
+combinações possiveis. Em Java, as entradas sao ajustadas com trim e uppercase;
+em C, a normalizacao e realizada com funcoes auxiliares que removem espacos e
+aplicam conversao para maiusculo. Valores nulos, vazios ou invalidos sao
+rejeitados em ambos os casos.
+
+Assim, o equivalente direto entre as versoes e:
+
+- Java: recebe dois tipos, normaliza e acessa a matriz por indice.
+- C: recebe dois tipos, normaliza e acessa a mesma matriz por indice.
+
+A regra de decisao final permanece a mesma, independentemente da linguagem.
+
+2. PRIORIDADE FEFO
+
+Na versao Java, a classe bolsahemocomponentefefoservice ordena as bolsas
+disponíveis pela data de validade, dando prioridade àquelas que vencem primeiro.
+Em caso de empate, o criterio de desempate e o codigo da bolsa.
+
+Na versao em C, a mesma ideia e implementada por meio de uma estrutura que
+representa a bolsa e uma funcao que insere cada bolsa em ordem. A comparacao
+entre duas bolsas leva em conta primeiro a data de validade e, em seguida, o
+codigo, se houver empate entre datas.
+
+Esse comportamento e equivalente ao metodo de ordenacao utilizado em Java:
+quanto menor a data de validade, maior a prioridade da bolsa. O sistema ignora
+bolsas indisponíveis para que a lista final contenha somente itens elegíveis para
+uso.
+
+A estrutura C faz a mesma funcao da lista Java: percorre as bolsas, verifica a
+status/condicao de disponibilidade e insere cada elemento na posicao correta de
+forma ordenada. Com isso, a primeira bolsa da lista representa a proxima
+solicitacao mais urgente, seguindo a regra FEFO.
+
+3. DIFERENCAS ESTRUTURAIS ENTRE JAVA E C
+
+A diferenca principal entre as duas versoes nao e na regra de negocio, e sim na
+forma de representar os dados e as operacoes.
+
+Em Java:
+- os dados sao organizados em objetos e classes;
+- a logica fica dentro de metodos;
+- as estruturas de lista sao manipuladas por stream ou por colecoes;
+- o gerenciamento de memoria e automatizado.
+
+Em C:
+- os dados sao organizados em structs;
+- a logica fica em funcoes;
+- a ordenacao e feita por insercao em vetores;
+- a memoria precisa ser gerenciada manualmente.
+
+Mesmo com essa diferenca de paradigma, a semantica da regra e preservada. A
+matriz ABO/Rh continua a mesma, e a ordenacao FEFO continua priorizando a bolsa
+mais próxima do vencimento.
+
+4. CONCLUSAO
+
+As implementacoes em Java e em C sao equivalentes do ponto de vista funcional.
+A regra de compatibilidade ABO/Rh na matriz fixa e a ordenacao FEFO por validade
+sao mantidas em ambas as linguagens, com as adaptacoes necessarias ao modelo de
+programacao de cada uma. A principal finalidade deste documento e facilitar a
+compreensao da correspondencia entre as solucoes, permitindo que a leitura da
+versao Java sirva como referencia direta para a versao C e vice-versa.
