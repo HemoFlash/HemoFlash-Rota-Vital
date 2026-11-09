@@ -197,7 +197,7 @@
                 <td class="px-4 py-3 text-hemo-textMain" th:text="${bolsa.tipoSanguineo}">O+</td>
                 <td class="px-4 py-3 text-hemo-textMain" th:text="|${bolsa.quantidadeMl} ml|">250 ml</td>
                 <td class="px-4 py-3 text-hemo-textMain"
-                    th:text="${bolsa.hospitalEstoque != null ? bolsa.hospitalEstoque.nome : 'Não informado'}">Hospital Recife</td>
+                    th:text="${bolsa.hospitalEstoque != null ? bolsa.hospitalEstoque.nome : 'Não informado'}">Hospital</td>
                 <td class="px-4 py-3 text-hemo-textMain"
                     th:text="${bolsa.dataValidade != null ? #temporals.format(bolsa.dataValidade, 'dd/MM/yyyy') : 'Não informada'}">09/11/2026</td>
               </tr>

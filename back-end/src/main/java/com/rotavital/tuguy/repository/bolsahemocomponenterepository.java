@@ -15,6 +15,8 @@ public interface bolsahemocomponenterepository extends JpaRepository<bolsahemoco
 
     long countByRequisicao_Id(Long requisicaoId);
 
+    List<bolsahemocomponente> findAllByHospitalEstoque_Id(Long hospitalId);
+
     boolean existsByCodigoIgnoreCase(String codigo);
 
     List<bolsahemocomponente> findAllByRequisicao_IdAndStatusIgnoreCase(Long requisicaoId, String status);

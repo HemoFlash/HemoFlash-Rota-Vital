@@ -169,11 +169,64 @@ public class PlanejamentoRotaService {
 
     private Map<String, List<Trecho>> criarGrafo() {
         Map<String, List<Trecho>> grafo = new HashMap<>();
-        adicionarTrechoBidirecional(grafo, "REC0001", "OLI0001", 18);
-        adicionarTrechoBidirecional(grafo, "REC0001", "CAR0001", 135);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital da Restauração (HR)", 1.4);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital Santa Joana Recife", 2.1);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital Esperança Recife", 1.2);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco",
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", 1.6);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital da Restauração (HR)", "Hospital Santa Joana Recife", 1.2);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital da Restauração (HR)", "Hospital Esperança Recife", 1.8);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital da Restauração (HR)",
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", 2.2);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital Santa Joana Recife", "Hospital Esperança Recife", 2.4);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital Santa Joana Recife",
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", 2.8);
+        adicionarTrechoEntreHospitais(grafo,
+                "Hospital Esperança Recife",
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", 1.1);
+
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital Olinda", 18);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital Caruaru", 135);
+        adicionarTrechoEntreHospitais(grafo,
+                "Real Hospital Português de Beneficência em Pernambuco", "Hospital Petrolina", 730);
+        adicionarTrechoEntreHospitais(grafo, "Hospital da Restauração (HR)", "Hospital Olinda", 17);
+        adicionarTrechoEntreHospitais(grafo, "Hospital da Restauração (HR)", "Hospital Caruaru", 137);
+        adicionarTrechoEntreHospitais(grafo, "Hospital da Restauração (HR)", "Hospital Petrolina", 735);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Santa Joana Recife", "Hospital Olinda", 19);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Santa Joana Recife", "Hospital Caruaru", 138);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Santa Joana Recife", "Hospital Petrolina", 738);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Esperança Recife", "Hospital Olinda", 18.5);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Esperança Recife", "Hospital Caruaru", 136);
+        adicionarTrechoEntreHospitais(grafo, "Hospital Esperança Recife", "Hospital Petrolina", 732);
+        adicionarTrechoEntreHospitais(grafo,
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", "Hospital Olinda", 20);
+        adicionarTrechoEntreHospitais(grafo,
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", "Hospital Caruaru", 140);
+        adicionarTrechoEntreHospitais(grafo,
+                "IMIP - Instituto de Medicina Integral Professor Fernando Figueira", "Hospital Petrolina", 740);
         adicionarTrechoBidirecional(grafo, "OLI0001", "CAR0001", 145);
         adicionarTrechoBidirecional(grafo, "CAR0001", "PET0001", 590);
         return grafo;
+    }
+
+    private void adicionarTrechoEntreHospitais(Map<String, List<Trecho>> grafo,
+                                                String nomeOrigem, String nomeDestino, double distanciaKm) {
+        hospital origem = hospitalRepository.findByNomeIgnoreCase(nomeOrigem).orElse(null);
+        hospital destino = hospitalRepository.findByNomeIgnoreCase(nomeDestino).orElse(null);
+        if (origem != null && destino != null) {
+            adicionarTrechoBidirecional(grafo, origem.getCodigo(), destino.getCodigo(), distanciaKm);
+        }
     }
 
     private void adicionarTrechoBidirecional(Map<String, List<Trecho>> grafo,

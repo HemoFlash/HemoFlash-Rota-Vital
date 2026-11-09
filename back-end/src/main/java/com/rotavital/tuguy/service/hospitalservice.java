@@ -1,6 +1,8 @@
 package com.rotavital.tuguy.service;
 
 import com.rotavital.tuguy.model.hospital;
+import com.rotavital.tuguy.model.bolsahemocomponente;
+import com.rotavital.tuguy.repository.bolsahemocomponenterepository;
 import com.rotavital.tuguy.repository.hospitalrepository;
 import com.rotavital.tuguy.repository.requisicaorepository;
 import org.springframework.boot.CommandLineRunner;
@@ -19,19 +21,27 @@ public class hospitalservice implements CommandLineRunner {
     private static final Pattern NAO_LETRAS = Pattern.compile("[^A-Z]+");
     private final hospitalrepository repository;
     private final requisicaorepository requisicaoRepository;
+    private final bolsahemocomponenterepository bolsaRepository;
 
-    public hospitalservice(hospitalrepository repository, requisicaorepository requisicaoRepository) {
+    public hospitalservice(hospitalrepository repository, requisicaorepository requisicaoRepository,
+                           bolsahemocomponenterepository bolsaRepository) {
         this.repository = repository;
         this.requisicaoRepository = requisicaoRepository;
+        this.bolsaRepository = bolsaRepository;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        inserirOuAtualizar("REC0001", "Hospital Recife", "Recife");
+        migrarHospitalRecifeGenerico();
         inserirOuAtualizar("OLI0001", "Hospital Olinda", "Olinda");
         inserirOuAtualizar("CAR0001", "Hospital Caruaru", "Caruaru");
         inserirOuAtualizar("PET0001", "Hospital Petrolina", "Petrolina");
+        garantirHospital("Real Hospital Português de Beneficência em Pernambuco", "Recife");
+        garantirHospital("Hospital da Restauração (HR)", "Recife");
+        garantirHospital("Hospital Santa Joana Recife", "Recife");
+        garantirHospital("Hospital Esperança Recife", "Recife");
+        garantirHospital("IMIP - Instituto de Medicina Integral Professor Fernando Figueira", "Recife");
     }
 
     @Transactional(readOnly = true)
@@ -89,6 +99,33 @@ public class hospitalservice implements CommandLineRunner {
             }
         } else if (!repository.existsByCodigoIgnoreCase(codigo)) {
             repository.save(new hospital(codigo, nome, municipio));
+        }
+    }
+
+    private void migrarHospitalRecifeGenerico() {
+        String nomeNovo = "Real Hospital Português de Beneficência em Pernambuco";
+        hospital generico = repository.findByNomeIgnoreCase("Hospital Recife").orElse(null);
+        hospital real = repository.findByNomeIgnoreCase(nomeNovo).orElse(null);
+        if (generico == null) {
+            return;
+        }
+        if (real == null) {
+            generico.setNome(nomeNovo);
+            generico.setMunicipio("Recife");
+            repository.save(generico);
+            return;
+        }
+
+        List<bolsahemocomponente> bolsas = bolsaRepository.findAllByHospitalEstoque_Id(generico.getId());
+        bolsas.forEach(bolsa -> bolsa.setHospitalEstoque(real));
+        bolsaRepository.saveAll(bolsas);
+        requisicaoRepository.atualizarCodigoHospitalDestino(generico.getCodigo(), real.getCodigo());
+        repository.delete(generico);
+    }
+
+    private void garantirHospital(String nome, String municipio) {
+        if (repository.findByNomeIgnoreCase(nome).isEmpty()) {
+            cadastrar(new hospital(null, nome, municipio));
         }
     }
 
