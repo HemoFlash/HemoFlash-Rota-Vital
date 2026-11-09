@@ -35,42 +35,10 @@
     }
   </script>
 </head>
-<body>
-  <div class="min-h-screen flex">
-    <aside class="w-64 bg-hemo-moss text-white p-6">
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-10 h-10 rounded-xl bg-hemo-coral flex items-center justify-center">
-          <i class="fa-solid fa-droplet"></i>
-        </div>
-        <div>
-          <div class="text-lg font-bold">HemoFlash</div>
-          <div class="text-xs opacity-80">Hemocentro</div>
-        </div>
-      </div>
-
-      <nav class="space-y-2">
-        <a href="/menu" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 text-white font-medium">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-        <a href="/bolsas" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
-          <i class="fa-solid fa-vials"></i> Estoque
-        </a>
-        <a href="/requisicoes" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
-          <i class="fa-solid fa-truck-medical"></i> Requisições
-        </a>
-        <a href="/monitoramento/temperatura" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
-          <i class="fa-solid fa-temperature-half"></i> Temperatura
-        </a>
-        <a href="/bolsas/nova" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
-          <i class="fa-solid fa-plus"></i> Nova bolsa
-        </a>
-        <a href="/login" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
-          <i class="fa-solid fa-right-from-bracket"></i> Sair
-        </a>
-      </nav>
-    </aside>
-
-    <main class="flex-1 p-8">
+<body class="rv-app">
+  <div class="min-h-screen">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <main class="p-8">
       <div class="flex items-center justify-between mb-8">
         <div>
           <p class="text-sm uppercase tracking-[0.2em] text-hemo-textSub">Painel</p>
@@ -212,8 +180,29 @@
           <h2 class="text-xl font-bold text-hemo-textMain">Bolsas cadastradas</h2>
           <span class="text-sm text-hemo-textSub" th:text="|${#lists.size(bolsas)} bolsas registradas|">0 bolsas registradas</span>
         </div>
-        <div class="flex flex-wrap gap-2" th:if="${!#lists.isEmpty(bolsas)}">
-          <span class="inline-flex items-center rounded-full bg-hemo-activeBg px-3 py-1.5 text-xs font-semibold text-hemo-textMain" th:each="bolsa : ${bolsas}" th:text="${bolsa.codigo}">CODIGO</span>
+        <div class="overflow-x-auto" th:if="${!#lists.isEmpty(bolsas)}">
+          <table class="min-w-full text-left text-sm">
+            <thead class="bg-hemo-activeBg text-hemo-textSub">
+              <tr>
+                <th class="px-4 py-3 font-semibold">ID</th>
+                <th class="px-4 py-3 font-semibold">Tipo sanguíneo</th>
+                <th class="px-4 py-3 font-semibold">Quantidade</th>
+                <th class="px-4 py-3 font-semibold">Hospital de origem</th>
+                <th class="px-4 py-3 font-semibold">Data de validade</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-hemo-border">
+              <tr th:each="bolsa : ${bolsas}">
+                <td class="px-4 py-3 font-semibold text-hemo-textMain" th:text="${bolsa.id}">1</td>
+                <td class="px-4 py-3 text-hemo-textMain" th:text="${bolsa.tipoSanguineo}">O+</td>
+                <td class="px-4 py-3 text-hemo-textMain" th:text="|${bolsa.quantidadeMl} ml|">250 ml</td>
+                <td class="px-4 py-3 text-hemo-textMain"
+                    th:text="${bolsa.hospitalEstoque != null ? bolsa.hospitalEstoque.nome : 'Não informado'}">Hospital Recife</td>
+                <td class="px-4 py-3 text-hemo-textMain"
+                    th:text="${bolsa.dataValidade != null ? #temporals.format(bolsa.dataValidade, 'dd/MM/yyyy') : 'Não informada'}">09/11/2026</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="rounded-xl border border-dashed border-hemo-border p-4 text-sm text-hemo-textSub" th:if="${#lists.isEmpty(bolsas)}">
           Nenhuma bolsa cadastrada no momento.
@@ -243,6 +232,9 @@
                 <td class="px-6 py-4 text-hemo-textMain" th:text="${codigosAlocadosPorRequisicao.get(r.id) ?: 'Nenhuma'}">Nenhuma</td>
                 <td class="px-6 py-4">
                   <a class="text-sm font-semibold text-hemo-moss hover:underline" th:href="@{/requisicoes/{id}/alocar-bolsa(id=${r.id})}">Alocar bolsa</a>
+                  <a th:if="${codigosAlocadosPorRequisicao.containsKey(r.id)}"
+                     class="ml-3 text-sm font-semibold text-hemo-moss hover:underline"
+                     th:href="@{/requisicoes/{id}/rota(id=${r.id})}">Planejar rota</a>
                 </td>
               </tr>
               <tr th:if="${#lists.isEmpty(requisicoes)}">
@@ -298,7 +290,7 @@
               <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
             </a>
             <a href="/monitoramento/temperatura" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
-              <span class="font-medium">Monitorar temperatura</span>
+              <span class="font-medium">Monitorar temperatura dos veículos</span>
               <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
             </a>
           </div>

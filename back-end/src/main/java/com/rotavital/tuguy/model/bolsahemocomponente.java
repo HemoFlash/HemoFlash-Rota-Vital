@@ -13,21 +13,16 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bolsas_hemocomponentes")
 public class bolsahemocomponente {
 
-    private static final long LIMITE_LEITURA_DESATUALIZADA_SEGUNDOS = 20;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Código da bolsa é obrigatório")
     @Column(unique = true)
     private String codigo;
 
@@ -47,17 +42,15 @@ public class bolsahemocomponente {
     @NotNull(message = "Data de validade é obrigatória")
     private LocalDate dataValidade;
 
-    @NotBlank(message = "Status é obrigatório")
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "requisicao_id", nullable = true)
     private requisicao requisicao;
 
-    @Column(precision = 3, scale = 1)
-    private BigDecimal temperaturaAtual;
-
-    private LocalDateTime ultimaLeituraTemperatura;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_estoque_id")
+    private hospital hospitalEstoque;
 
     public bolsahemocomponente() {
     }
@@ -85,35 +78,6 @@ public class bolsahemocomponente {
 
     public boolean estaVencida() {
         return this.dataValidade != null && this.dataValidade.isBefore(LocalDate.now());
-    }
-
-    public boolean estaEmMonitoramento() {
-        return "DISPONIVEL".equalsIgnoreCase(status)
-                || "ALOCADA".equalsIgnoreCase(status)
-                || "EM_TRANSITO".equalsIgnoreCase(status);
-    }
-
-    public boolean estaDentroDaFaixa() {
-        return temperaturaAtual != null
-                && temperaturaAtual.compareTo(new BigDecimal("1.0")) >= 0
-                && temperaturaAtual.compareTo(new BigDecimal("7.0")) <= 0;
-    }
-
-    public String getSituacaoTemperatura() {
-        if (temperaturaAtual == null) {
-            return "AGUARDANDO LEITURA";
-        }
-        return estaDentroDaFaixa() ? "NORMAL" : "ALERTA";
-    }
-
-    public boolean isLeituraTemperaturaDesatualizada() {
-        return leituraTemperaturaDesatualizadaEm(LocalDateTime.now());
-    }
-
-    public boolean leituraTemperaturaDesatualizadaEm(LocalDateTime instanteAtual) {
-        return ultimaLeituraTemperatura != null
-                && ultimaLeituraTemperatura.isBefore(
-                        instanteAtual.minusSeconds(LIMITE_LEITURA_DESATUALIZADA_SEGUNDOS));
     }
 
     public Long getId() {
@@ -188,19 +152,12 @@ public class bolsahemocomponente {
         this.requisicao = requisicao;
     }
 
-    public BigDecimal getTemperaturaAtual() {
-        return temperaturaAtual;
+    public hospital getHospitalEstoque() {
+        return hospitalEstoque;
     }
 
-    public void setTemperaturaAtual(BigDecimal temperaturaAtual) {
-        this.temperaturaAtual = temperaturaAtual;
+    public void setHospitalEstoque(hospital hospitalEstoque) {
+        this.hospitalEstoque = hospitalEstoque;
     }
 
-    public LocalDateTime getUltimaLeituraTemperatura() {
-        return ultimaLeituraTemperatura;
-    }
-
-    public void setUltimaLeituraTemperatura(LocalDateTime ultimaLeituraTemperatura) {
-        this.ultimaLeituraTemperatura = ultimaLeituraTemperatura;
-    }
 }

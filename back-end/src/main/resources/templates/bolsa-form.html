@@ -14,7 +14,8 @@
     tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
   </script>
 </head>
-<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+<body class="rv-app bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <main class="min-h-screen p-6 md:p-8">
     <div class="mx-auto max-w-3xl rounded-2xl border border-hemo-border bg-white p-6 shadow-sm md:p-8">
       <div class="mb-6 flex items-center justify-between gap-4">
@@ -29,12 +30,6 @@
 
       <form class="space-y-5" th:action="${bolsa.id == null} ? @{/bolsas} : @{/bolsas/{id}(id=${bolsa.id})}" th:object="${bolsa}" method="post">
         <div>
-          <label for="codigo" class="mb-2 block text-sm font-semibold text-hemo-textMain">Código</label>
-          <input id="codigo" type="text" th:field="*{codigo}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
-          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('codigo')}" th:errors="*{codigo}"></small>
-        </div>
-
-        <div>
           <label for="tipoSanguineo" class="mb-2 block text-sm font-semibold text-hemo-textMain">Tipo sanguíneo</label>
           <select id="tipoSanguineo" th:field="*{tipoSanguineo}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
             <option value="">Selecione um tipo sanguíneo</option>
@@ -47,6 +42,17 @@
           <label for="componente" class="mb-2 block text-sm font-semibold text-hemo-textMain">Componente</label>
           <input id="componente" type="text" th:field="*{componente}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
           <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('componente')}" th:errors="*{componente}"></small>
+        </div>
+
+        <div>
+          <label for="hospitalEstoqueId" class="mb-2 block text-sm font-semibold text-hemo-textMain">Hospital onde a bolsa está em estoque</label>
+          <select id="hospitalEstoqueId" name="hospitalEstoqueId" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
+            <option value="">Selecione o hospital de origem</option>
+            <option th:each="hospital : ${hospitais}" th:value="${hospital.id}"
+                    th:selected="${bolsa.hospitalEstoque != null and bolsa.hospitalEstoque.id == hospital.id}"
+                    th:text="|${hospital.nome} — ${hospital.municipio}|">Hospital Recife</option>
+          </select>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${erroHospitalEstoque}" th:text="${erroHospitalEstoque}"></small>
         </div>
 
         <div>
@@ -67,11 +73,15 @@
           <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('dataValidade')}" th:errors="*{dataValidade}"></small>
         </div>
 
-        <div>
-          <label for="status" class="mb-2 block text-sm font-semibold text-hemo-textMain">Status</label>
-          <input id="status" type="text" th:field="*{status}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
-          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></small>
-        </div>
+        <p class="rounded-xl bg-hemo-activeBg p-4 text-sm text-hemo-textSub"
+           th:if="${bolsa.id == null}">
+          O identificador sequencial e o status inicial disponível serão gerados pelo sistema.
+        </p>
+        <p class="rounded-xl bg-hemo-activeBg p-4 text-sm text-hemo-textSub"
+           th:if="${bolsa.id != null}"
+           th:text="|ID: ${bolsa.id} · Status atual: ${bolsa.status}|">
+          ID e status atual
+        </p>
 
         <div class="flex flex-wrap gap-3 pt-2">
           <button class="inline-flex items-center gap-2 rounded-xl bg-hemo-moss px-4 py-3 text-sm font-semibold text-white hover:bg-hemo-mossHover" type="submit" th:text="${bolsa.id == null ? 'Salvar bolsa' : 'Salvar alterações'}">Salvar bolsa</button>

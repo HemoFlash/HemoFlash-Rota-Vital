@@ -14,7 +14,8 @@
     tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
   </script>
 </head>
-<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+<body class="rv-app bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <div class="min-h-screen p-6 md:p-8">
     <div class="max-w-7xl mx-auto space-y-6">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -33,9 +34,16 @@
       </div>
 
       <section class="rounded-2xl border border-hemo-border bg-white p-5 shadow-sm" th:if="${requisicao != null}">
-        <h2 class="text-xl font-bold text-hemo-textMain" th:text="|Requisição: ${requisicao.titulo}|">Requisição</h2>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <h2 class="text-xl font-bold text-hemo-textMain" th:text="|Requisição: ${requisicao.titulo}|">Requisição</h2>
+          <a th:if="${podePlanejarRota}" th:href="@{/requisicoes/{id}/rota(id=${requisicao.id})}"
+             class="inline-flex items-center gap-2 rounded-xl bg-hemo-moss px-4 py-2 text-sm font-semibold text-white hover:bg-hemo-mossHover">
+            <i class="fa-solid fa-route"></i> Planejar rota
+          </a>
+        </div>
         <p class="mt-2 text-sm text-hemo-textSub" th:text="${requisicao.descricao}">Descrição da requisição</p>
         <p class="mt-2 text-sm text-hemo-textMain" th:text="|Tipo sanguíneo: ${requisicao.tipoSanguineo}|">Tipo sanguíneo da requisição</p>
+        <p class="mt-2 text-sm text-hemo-textMain" th:if="${hospitalDestino != null}" th:text="|Destino: ${hospitalDestino.nome}|">Destino</p>
         <p class="mt-2 text-sm font-medium text-rose-600" th:if="${#strings.isEmpty(requisicao.tipoSanguineo)}">
           Esta requisição não tem tipo sanguíneo cadastrado; não é possível verificar compatibilidade.
         </p>

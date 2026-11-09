@@ -31,20 +31,21 @@ public class bolsahemocomponenteservice {
             throw new IllegalArgumentException("Bolsa não pode ser nula");
         }
 
-        if (bolsa.getCodigo() == null || bolsa.getCodigo().isBlank()) {
-            throw new IllegalArgumentException("Código da bolsa é obrigatório");
+        if (bolsa.getCodigo() != null && !bolsa.getCodigo().isBlank()) {
+            String codigoNormalizado = bolsa.getCodigo().trim();
+            if (repository.existsByCodigoIgnoreCase(codigoNormalizado)) {
+                throw new IllegalArgumentException("Já existe uma bolsa cadastrada com este código.");
+            }
+            bolsa.setCodigo(codigoNormalizado);
         }
 
-        String codigoNormalizado = bolsa.getCodigo().trim();
-        if (repository.existsByCodigoIgnoreCase(codigoNormalizado)) {
-            throw new IllegalArgumentException("Já existe uma bolsa cadastrada com este código.");
+        bolsa.setStatus(bolsa.getRequisicao() == null ? "DISPONIVEL" : "ALOCADA");
+        bolsahemocomponente salva = repository.save(bolsa);
+        if (salva.getCodigo() == null || salva.getCodigo().isBlank()) {
+            salva.setCodigo("BOLSA-" + salva.getId());
+            return repository.save(salva);
         }
-
-        if (bolsa.getStatus() == null || bolsa.getStatus().isBlank()) {
-            bolsa.setStatus("DISPONIVEL");
-        }
-
-        return repository.save(bolsa);
+        return salva;
     }
 
     public List<bolsahemocomponente> listarTodos() {
@@ -64,6 +65,10 @@ public class bolsahemocomponenteservice {
 
     public boolean existePorRequisicao(Long requisicaoId) {
         return repository.countByRequisicao_Id(requisicaoId) > 0;
+    }
+
+    public boolean temBolsaAlocada(Long requisicaoId) {
+        return !repository.findAllByRequisicao_IdAndStatusIgnoreCase(requisicaoId, "ALOCADA").isEmpty();
     }
 
     public List<bolsahemocomponente> testeABO(String tipoRequisicao) {
@@ -113,11 +118,12 @@ public class bolsahemocomponenteservice {
             throw new IllegalArgumentException("ID e bolsa são obrigatórios");
         }
 
-        if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Bolsa não encontrada para o ID informado");
-        }
-
+        bolsahemocomponente existente = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bolsa não encontrada para o ID informado"));
         bolsaAtualizada.setId(id);
+        bolsaAtualizada.setCodigo(existente.getCodigo());
+        bolsaAtualizada.setRequisicao(existente.getRequisicao());
+        bolsaAtualizada.setStatus(existente.getRequisicao() == null ? "DISPONIVEL" : "ALOCADA");
         return repository.save(bolsaAtualizada);
     }
 

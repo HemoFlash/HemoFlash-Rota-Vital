@@ -1,0 +1,30 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sidebar">
+  <nav class="rv-sidebar" aria-label="Navegação principal">
+    <a class="rv-brand" href="/menu">
+      <span class="rv-brand-mark"><i class="fa-solid fa-droplet" aria-hidden="true"></i></span>
+      <span>Rota Vital</span>
+    </a>
+    <div class="rv-nav-links">
+      <a href="/menu" title="Painel">
+        <i class="fa-solid fa-house" aria-hidden="true"></i><span>Painel</span>
+      </a>
+      <a href="/requisicoes" title="Requisições">
+        <i class="fa-solid fa-truck-medical" aria-hidden="true"></i><span>Requisições</span>
+      </a>
+      <a href="/bolsas" title="Estoque">
+        <i class="fa-solid fa-vials" aria-hidden="true"></i><span>Estoque</span>
+      </a>
+      <a href="/hospitais" title="Hospitais">
+        <i class="fa-solid fa-hospital" aria-hidden="true"></i><span>Hospitais</span>
+      </a>
+      <a href="/monitoramento/temperatura" title="Monitoramento de temperatura">
+        <i class="fa-solid fa-temperature-half" aria-hidden="true"></i><span>Temperatura</span>
+      </a>
+    </div>
+    <a class="rv-logout" href="/login" title="Sair">
+      <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Sair</span>
+    </a>
+  </nav>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/sidebar.css}">
+</th:block>

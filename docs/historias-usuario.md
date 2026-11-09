@@ -4,7 +4,7 @@ okay# Rota Vital — Histórias de Usuário e Critérios de Aceitação
 
 **Nome:** Rota Vital — Gestão e Distribuição de Hemocomponentes na Rede de Sangue
 
-**Descrição:** Aplicação web em Java/Spring Boot que apoia a rede de sangue na gestão e distribuição de hemocomponentes. O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas de distribuição respeitando a cadeia fria e as janelas de tempo, e monitora temperatura e rede em painéis.
+**Descrição:** Aplicação web em Java/Spring Boot que apoia a rede de sangue na gestão e distribuição de hemocomponentes. O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas entre hospitais considerando a modalidade de transporte e a validade, e monitora a temperatura dos veículos em transporte.
 
 > O projeto utiliza exclusivamente **dados sintéticos**. A telemetria de temperatura/GPS é simulada, a compatibilidade ABO/Rh possui finalidade didática e não substitui protocolos clínicos, e não há integração com sistemas oficiais da Hemorrede.
 
@@ -114,55 +114,63 @@ Como funcionário do hemocentro, eu gostaria de consultar a compatibilidade ABO/
 ## HU05 — Planejar rota de distribuição
 
 **História de usuário**
-Como responsável pela distribuição, eu gostaria de calcular uma rota para transportar os hemocomponentes até os hospitais, considerando as janelas de tempo e a cadeia fria, para que eu possa realizar a entrega dentro das condições necessárias.
+Como responsável pela distribuição, eu gostaria de calcular uma rota para transferir hemocomponentes entre hospitais da rede, considerando o hospital onde a bolsa está em estoque, a modalidade de transporte e a data de validade, para que eu possa redistribuir excedentes antes do vencimento e atender hospitais com necessidade.
 
 **Cenário 1 — Calcular rota**
-- **Dado** que existem hemocomponentes alocados para um hospital
-- **E** existe uma rota disponível entre a origem e o destino
+- **Dado** que existe um hemocomponente alocado a uma requisição de um hospital cadastrado
+- **E** a bolsa informa em qual hospital cadastrado está em estoque
+- **E** existe um caminho entre os hospitais na rede
 - **Quando** o responsável solicitar o cálculo da rota
 - **Então** o sistema deve apresentar uma rota de distribuição.
 
-**Cenário 2 — Considerar janela de tempo**
-- **Dado** que uma requisição possui uma janela de tempo para entrega
+**Cenário 2 — Considerar modalidade de transporte e validade**
+- **Dado** que uma bolsa possui componente e data de validade cadastrados
+- **E** o responsável seleciona transporte refrigerado ou não refrigerado
 - **Quando** o sistema calcular a rota
-- **Então** deve considerar o tempo necessário para realizar a entrega dentro da janela estabelecida.
+- **Então** deve estimar distância e duração entre os hospitais
+- **E** deve comparar a duração com o limite demonstrativo do componente para a modalidade
+- **E** a chegada estimada não pode ultrapassar a data de validade.
 
-**Cenário 3 — Rota fora da janela de tempo**
-- **Dado** que uma rota disponível não permite realizar a entrega dentro da janela de tempo
+**Cenário 3 — Transporte incompatível com o limite ou a validade**
+- **Dado** que a duração da rota excede o limite de transporte do componente
+- **Ou** a chegada estimada ocorre depois da validade do hemocomponente
 - **Quando** o responsável solicitar o planejamento da distribuição
-- **Então** o sistema deve informar que a rota não atende ao prazo estabelecido.
+- **Então** o sistema deve informar que a transferência não é viável nas condições selecionadas.
 
 **Cenário 4 — Não existe rota disponível**
-- **Dado** que não existe uma rota disponível entre a origem e o destino
+- **Dado** que não existe um trecho/caminho cadastrado entre o hospital de estoque e o hospital de destino
 - **Quando** o responsável solicitar o cálculo da rota
 - **Então** o sistema deve informar que não foi encontrada uma rota válida.
 
+> **Observação:** distâncias, velocidades e limites por componente/modalidade são sintéticos e demonstrativos; não representam protocolos clínicos nem validação da cadeia fria.
+
 ---
 
-## HU06 — Monitorar temperatura do transporte
+## HU06 — Monitorar temperatura dos veículos de transporte
 
 **História de usuário**
-Como responsável pelo monitoramento, eu gostaria de acompanhar a temperatura dos transportes de hemocomponentes em um painel, para que eu possa identificar situações que possam comprometer a cadeia fria.
+Como responsável pelo monitoramento, eu gostaria de acompanhar a temperatura de cada veículo em transporte em um painel, para que eu possa identificar situações que possam comprometer a cadeia fria.
 
 **Cenário 1 — Temperatura dentro da faixa esperada**
-- **Dado** que existe um transporte em andamento
+- **Dado** que existe um veículo registrado em transporte
 - **E** a temperatura registrada está dentro da faixa estabelecida
 - **Quando** o responsável acessar o painel de monitoramento
-- **Então** o sistema deve apresentar o transporte como dentro das condições esperadas.
+- **Então** o sistema deve apresentar o veículo como dentro das condições esperadas.
 
 **Cenário 2 — Temperatura fora da faixa esperada**
-- **Dado** que existe um transporte em andamento
+- **Dado** que existe um veículo registrado em transporte
 - **E** a temperatura registrada está fora da faixa estabelecida
 - **Quando** o sistema receber a informação de temperatura
 - **Então** deve sinalizar uma situação de alerta no painel.
 
-**Cenário 3 — Monitorar vários transportes**
-- **Dado** que existem vários transportes em andamento
+**Cenário 3 — Monitorar vários veículos**
+- **Dado** que existem vários veículos registrados em transporte
 - **Quando** o responsável acessar o painel de monitoramento
-- **Então** o sistema deve apresentar as informações de temperatura dos transportes monitorados.
+- **Então** o sistema deve apresentar uma leitura individual para cada veículo monitorado.
 
 **Regras da simulação**
-- O monitoramento periódico é associado à bolsa, não depende de um transporte cadastrado e continua para bolsas disponíveis, alocadas ou em trânsito.
+- Cada leitura de temperatura pertence a um veículo em transporte, nunca a uma bolsa individual.
+- O responsável informa a identificação e a descrição do veículo ao iniciar seu monitoramento; ao concluir o transporte, o veículo deixa de receber novas leituras e sai do painel de ativos.
 - As leituras são sintéticas, atualizadas a cada 10 segundos enquanto a aplicação está ativa; a primeira leitura ocorre após 1 segundo.
 - A faixa esperada desta simulação é de 1 °C a 7 °C, inclusive. Leituras abaixo ou acima dela são sinalizadas como alerta.
 - O painel apresenta a leitura mais recente e seu horário, e marca como desatualizada uma amostra com mais de 20 segundos; a simulação não representa sensores reais nem mantém histórico de leituras.
@@ -232,7 +240,7 @@ Como usuário, eu gostaria de realizar meu cadastro utilizando meu e-mail de tra
 | HU03 | Alocar hemocomponentes priorizando a validade | Reduzir perdas por vencimento |
 | HU04 | Consultar compatibilidade ABO/Rh | Identificar bolsas compatíveis |
 | HU05 | Planejar rota de distribuição | Realizar entregas dentro das condições necessárias |
-| HU06 | Monitorar temperatura do transporte | Preservar a cadeia fria |
+| HU06 | Monitorar temperatura dos veículos de transporte | Preservar a cadeia fria |
 | HU07 | Acompanhar indicadores da rede | Apoiar a tomada de decisões |
 | HU08 | Cadastrar e acessar o aplicativo | Permitir acesso ao sistema |
 
