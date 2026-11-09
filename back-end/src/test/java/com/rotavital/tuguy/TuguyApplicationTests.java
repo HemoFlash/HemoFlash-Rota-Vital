@@ -198,7 +198,13 @@ class TuguyApplicationTests {
 		mockMvc.perform(get("/hospitais"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("hospitais"))
-				.andExpect(content().string(containsString("Hospital Recife")));
+				.andExpect(content().string(containsString("Real Hospital Português de Beneficência em Pernambuco")))
+				.andExpect(content().string(not(containsString(">Hospital Recife</"))))
+				.andExpect(content().string(containsString("Hospital da Restauração (HR)")))
+				.andExpect(content().string(containsString("Hospital Santa Joana Recife")))
+				.andExpect(content().string(containsString("Hospital Esperança Recife")))
+				.andExpect(content().string(containsString(
+						"IMIP - Instituto de Medicina Integral Professor Fernando Figueira")));
 
 		mockMvc.perform(post("/hospitais")
 						.param("nome", "Hospital de Teste da Rede")
@@ -290,7 +296,8 @@ class TuguyApplicationTests {
 				.andExpect(content().string(containsString(String.valueOf(bolsa.getId()))))
 				.andExpect(content().string(containsString("O+")))
 				.andExpect(content().string(containsString("250 ml")))
-				.andExpect(content().string(containsString("Hospital Recife")))
+				.andExpect(content().string(containsString(
+						"Real Hospital Português de Beneficência em Pernambuco")))
 				.andExpect(content().string(containsString("18/11/2026")));
 		org.junit.jupiter.api.Assertions.assertNull(bolsa.getRequisicao());
 		org.junit.jupiter.api.Assertions.assertEquals("REC0001", bolsa.getHospitalEstoque().getCodigo());
@@ -496,10 +503,32 @@ class TuguyApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(view().name("rota"))
 				.andExpect(content().string(containsString("ROTA_ENCONTRADA")))
-				.andExpect(content().string(containsString("Hospital Recife")))
+				.andExpect(content().string(containsString(
+						"Real Hospital Português de Beneficência em Pernambuco")))
 				.andExpect(content().string(containsString("Hospital Olinda")))
 				.andExpect(content().string(containsString("18.0 km")))
 				.andExpect(content().string(containsString("refrigerado")));
+	}
+
+	@Test
+	void matrizIncluiDistanciasFornecidasEntreHospitaisDoRecife() throws Exception {
+		hospital origem = hospitalService.buscarPorCodigo(
+				codigoHospital("Real Hospital Português de Beneficência em Pernambuco"));
+		hospital destino = hospitalService.buscarPorCodigo(
+				codigoHospital("Hospital da Restauração (HR)"));
+		requisicao requisicao = salvarRequisicaoComDestino("Rota entre hospitais do Recife", destino.getCodigo());
+		bolsahemocomponente bolsa = new bolsahemocomponente(
+				null, "ROTA-RECIFE-URBANA-" + requisicao.getId(), "O+", "Hemácias", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "ALOCADA", requisicao);
+		bolsa.setHospitalEstoque(origem);
+		bolsaService.criar(bolsa);
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId()))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("1.4 km")))
+				.andExpect(content().string(containsString(
+						"Real Hospital Português de Beneficência em Pernambuco")))
+				.andExpect(content().string(containsString("Hospital da Restauração (HR)")));
 	}
 
 	@Test
@@ -578,6 +607,14 @@ class TuguyApplicationTests {
 
 	private String hospitalId(String codigo) {
 		return hospitalService.buscarPorCodigo(codigo).getId().toString();
+	}
+
+	private String codigoHospital(String nome) {
+		return hospitalService.listarTodos().stream()
+				.filter(hospital -> nome.equals(hospital.getNome()))
+				.map(hospital::getCodigo)
+				.findFirst()
+				.orElseThrow();
 	}
 
 	@Test

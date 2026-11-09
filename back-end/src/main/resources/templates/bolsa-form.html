@@ -50,7 +50,7 @@
             <option value="">Selecione o hospital de origem</option>
             <option th:each="hospital : ${hospitais}" th:value="${hospital.id}"
                     th:selected="${bolsa.hospitalEstoque != null and bolsa.hospitalEstoque.id == hospital.id}"
-                    th:text="|${hospital.nome} — ${hospital.municipio}|">Hospital Recife</option>
+                    th:text="|${hospital.nome} — ${hospital.municipio}|">Hospital</option>
           </select>
           <small class="mt-1 block text-sm text-rose-600" th:if="${erroHospitalEstoque}" th:text="${erroHospitalEstoque}"></small>
         </div>
