@@ -1,4 +1,4 @@
-# Rota Vital — Histórias de Usuário e Critérios de Aceitação
+okay# Rota Vital — Histórias de Usuário e Critérios de Aceitação
 
 ## Projeto
 
@@ -161,6 +161,12 @@ Como responsável pelo monitoramento, eu gostaria de acompanhar a temperatura do
 - **Quando** o responsável acessar o painel de monitoramento
 - **Então** o sistema deve apresentar as informações de temperatura dos transportes monitorados.
 
+**Regras da simulação**
+- O monitoramento periódico é associado à bolsa, não depende de um transporte cadastrado e continua para bolsas disponíveis, alocadas ou em trânsito.
+- As leituras são sintéticas, atualizadas a cada 10 segundos enquanto a aplicação está ativa; a primeira leitura ocorre após 1 segundo.
+- A faixa esperada desta simulação é de 1 °C a 7 °C, inclusive. Leituras abaixo ou acima dela são sinalizadas como alerta.
+- O painel apresenta a leitura mais recente e seu horário, e marca como desatualizada uma amostra com mais de 20 segundos; a simulação não representa sensores reais nem mantém histórico de leituras.
+
 ---
 
 ## HU07 — Acompanhar indicadores da rede
@@ -182,6 +188,12 @@ Como gestor da rede de sangue, eu gostaria de visualizar indicadores de estoque 
 - **Dado** que determinado hemocomponente possui quantidade reduzida no estoque
 - **Quando** o gestor acessar o painel
 - **Então** o sistema deve destacar a situação de baixa disponibilidade.
+
+**Regras dos indicadores**
+- O estoque considera somente bolsas disponíveis, não vencidas e sem requisição associada.
+- O painel alerta quando o total de um grupo ABO (A, B, AB ou O) fica abaixo de 4 bolsas.
+- O painel sinaliza como reserva baixa um tipo ABO/Rh com apenas 1 bolsa e como indisponível um tipo sem bolsas.
+- O estoque também é apresentado por tipo ABO/Rh e componente, sinalizando pares conhecidos sem bolsas como indisponíveis; a demanda é a contagem de requisições registradas por tipo sanguíneo, não o número de unidades solicitadas.
 
 ---
 

@@ -58,6 +58,9 @@
         <a href="/requisicoes" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
           <i class="fa-solid fa-truck-medical"></i> Requisições
         </a>
+        <a href="/monitoramento/temperatura" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
+          <i class="fa-solid fa-temperature-half"></i> Temperatura
+        </a>
         <a href="/bolsas/nova" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5">
           <i class="fa-solid fa-plus"></i> Nova bolsa
         </a>
@@ -83,7 +86,7 @@
         <div class="bg-white border border-hemo-border rounded-2xl p-5 shadow-sm">
           <div class="text-sm text-hemo-textSub">Bolsas em estoque</div>
           <div class="mt-3 flex items-center justify-between">
-            <div class="text-3xl font-bold text-hemo-textMain" th:text="${#lists.size(bolsas)}">0</div>
+            <div class="text-3xl font-bold text-hemo-textMain" th:text="${indicadores.bolsasDisponiveis}">0</div>
             <div class="w-11 h-11 bg-hemo-activeBg rounded-xl flex items-center justify-center text-hemo-moss"><i class="fa-solid fa-vial"></i></div>
           </div>
         </div>
@@ -114,8 +117,99 @@
       </div>
 
       <section class="mt-8 bg-white border border-hemo-border rounded-2xl p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-bold text-hemo-textMain">Indicadores de estoque</h2>
+          <p class="text-sm text-hemo-textSub">Considera bolsas disponíveis e dentro da validade.</p>
+        </div>
+        <h3 class="text-sm font-bold uppercase tracking-wider text-hemo-textSub mb-3">Disponibilidade por grupo ABO</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="rounded-xl border p-4"
+               th:each="item : ${indicadores.estoquePorGrupoABO}"
+               th:classappend="${item.situacao == 'BAIXO'} ? 'border-rose-300 bg-rose-50' : 'border-hemo-border bg-white'">
+            <div class="flex items-center justify-between">
+              <span class="text-xl font-black text-hemo-textMain" th:text="${item.tipo}">A</span>
+              <span class="text-[10px] font-bold rounded-full px-2 py-1"
+                    th:classappend="${item.situacao == 'BAIXO'} ? 'bg-rose-600 text-white' : 'bg-emerald-100 text-emerald-800'"
+                    th:text="${item.situacao}">NORMAL</span>
+            </div>
+            <p class="mt-2 text-2xl font-bold text-hemo-textMain">
+              <span th:text="${item.quantidade}">0</span>
+              <span class="text-xs font-normal text-hemo-textSub">bolsas</span>
+            </p>
+            <p class="mt-1 text-xs text-hemo-textSub">Meta mínima: 4 bolsas</p>
+          </div>
+        </div>
+
+        <h3 class="text-sm font-bold uppercase tracking-wider text-hemo-textSub mt-6 mb-3">Disponibilidade por tipo ABO/Rh</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div class="rounded-xl border p-3"
+               th:each="item : ${indicadores.estoquePorTipoSanguineo}"
+               th:classappend="${item.situacao != 'NORMAL'} ? 'border-rose-300 bg-rose-50' : 'border-hemo-border bg-white'">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-lg font-black text-hemo-textMain" th:text="${item.tipo}">A+</span>
+              <span class="text-[9px] font-bold text-rose-700" th:if="${item.situacao != 'NORMAL'}"
+                    th:text="${item.situacao}">RESERVA BAIXA</span>
+            </div>
+            <p class="mt-1 text-xl font-bold text-hemo-textMain" th:text="${item.quantidade}">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-hemo-textSub mb-3">Estoque por componente</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-left text-sm">
+                <thead class="bg-hemo-activeBg text-hemo-textSub">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Tipo</th>
+                    <th class="px-3 py-2 font-semibold">Componente</th>
+                    <th class="px-3 py-2 font-semibold">Bolsas disponíveis</th>
+                    <th class="px-3 py-2 font-semibold">Situação</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-hemo-border">
+                  <tr th:each="item : ${indicadores.estoquePorComponente}">
+                    <td class="px-3 py-2 font-semibold" th:text="${item.tipoSanguineo}">O-</td>
+                    <td class="px-3 py-2" th:text="${item.componente}">Hemácias</td>
+                    <td class="px-3 py-2" th:text="${item.quantidade}">0</td>
+                    <td class="px-3 py-2 font-semibold"
+                        th:classappend="${item.situacao == 'NORMAL'} ? 'text-emerald-700' : 'text-rose-700'"
+                        th:text="${item.situacao}">NORMAL</td>
+                  </tr>
+                  <tr th:if="${#lists.isEmpty(indicadores.estoquePorComponente)}">
+                    <td class="px-3 py-3 text-hemo-textSub" colspan="4">Nenhuma bolsa disponível por componente.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-hemo-textSub mb-3">Demanda registrada por tipo</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-left text-sm">
+                <thead class="bg-hemo-activeBg text-hemo-textSub">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Tipo ABO/Rh</th>
+                    <th class="px-3 py-2 font-semibold">Requisições</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-hemo-border">
+                  <tr th:each="item : ${indicadores.demandaPorTipoSanguineo}">
+                    <td class="px-3 py-2 font-semibold" th:text="${item.tipoSanguineo}">O-</td>
+                    <td class="px-3 py-2" th:text="${item.quantidade}">0</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="mt-2 text-xs text-hemo-textSub">A demanda representa a contagem de requisições registradas; o sistema ainda não armazena quantidade solicitada.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-8 bg-white border border-hemo-border rounded-2xl p-6 shadow-sm">
         <div class="flex items-center justify-between gap-4 mb-4">
-          <h2 class="text-xl font-bold text-hemo-textMain">Bolsas em estoque</h2>
+          <h2 class="text-xl font-bold text-hemo-textMain">Bolsas cadastradas</h2>
           <span class="text-sm text-hemo-textSub" th:text="|${#lists.size(bolsas)} bolsas registradas|">0 bolsas registradas</span>
         </div>
         <div class="flex flex-wrap gap-2" th:if="${!#lists.isEmpty(bolsas)}">
@@ -201,6 +295,10 @@
             </a>
             <a href="/bolsas" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
               <span class="font-medium">Consultar estoque</span>
+              <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
+            </a>
+            <a href="/monitoramento/temperatura" class="flex items-center justify-between rounded-xl border border-hemo-border p-3 hover:bg-hemo-activeBg">
+              <span class="font-medium">Monitorar temperatura</span>
               <i class="fa-solid fa-arrow-right text-hemo-moss"></i>
             </a>
           </div>

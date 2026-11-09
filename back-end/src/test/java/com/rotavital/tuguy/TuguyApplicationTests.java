@@ -3,12 +3,15 @@ package com.rotavital.tuguy;
 import com.rotavital.tuguy.model.requisicao;
 import com.rotavital.tuguy.model.bolsahemocomponente;
 import com.rotavital.tuguy.service.bolsahemocomponenteservice;
+import com.rotavital.tuguy.service.monitoramentotemperaturaservice;
 import com.rotavital.tuguy.service.requisicaoservice;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.core.io.ClassPathResource;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,8 +24,12 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
 import java.time.LocalDate;
+import javax.sql.DataSource;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:rotavitaltest")
+@SpringBootTest(properties = {
+		"spring.datasource.url=jdbc:h2:mem:rotavitaltest",
+		"rotavital.monitoramento.initial-delay-ms=3600000"
+})
 @AutoConfigureMockMvc
 class TuguyApplicationTests {
 
@@ -35,8 +42,131 @@ class TuguyApplicationTests {
 	@Autowired
 	private bolsahemocomponenteservice bolsaService;
 
+	@Autowired
+	private monitoramentotemperaturaservice monitoramentoTemperaturaService;
+
+	@Autowired
+	private DataSource dataSource;
+
 	@Test
 	void contextLoads() {
+	}
+
+	@Test
+	void painelExibeIndicadoresDeEstoqueERequisicoesComDadosReais() throws Exception {
+		for (int i = 0; i < 4; i++) {
+			bolsaService.criar(new bolsahemocomponente(
+					null, "HU7-BPLUS-" + i, "B+", "Hemácias", 250,
+					LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null));
+		}
+		bolsaService.criar(new bolsahemocomponente(
+				null, "HU7-BMINUS", "B-", "Hemácias", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null));
+		requisicaoService.salvar(
+				new requisicao(null, "Pedido HU07", "Demanda para indicador", "Alta", "B-"));
+
+		mockMvc.perform(get("/menu"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("Indicadores de estoque")))
+				.andExpect(content().string(containsString("Disponibilidade por grupo ABO")))
+				.andExpect(content().string(containsString("Disponibilidade por tipo ABO/Rh")))
+				.andExpect(content().string(containsString("Estoque por componente")))
+				.andExpect(content().string(containsString("Demanda registrada por tipo")))
+				.andExpect(content().string(containsString("RESERVA BAIXA")))
+				.andExpect(content().string(containsString("Pedido HU07")));
+	}
+
+	@Test
+	void painelDeTemperaturaExibeLeiturasSinteticasDeBolsasDisponiveisEAlocadas() throws Exception {
+		requisicao requisicao = requisicaoService.salvar(
+				new requisicao(null, "Transporte HU06", "Bolsa em monitoramento", "Alta", "A+"));
+		bolsahemocomponente disponivel = bolsaService.criar(new bolsahemocomponente(
+				null, "HU6-DISPONIVEL", "O+", "Hemácias", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null));
+		bolsahemocomponente alocada = bolsaService.criar(new bolsahemocomponente(
+				null, "HU6-ALOCADA", "A+", "Plasma", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "ALOCADA", requisicao));
+		bolsahemocomponente emTransito = bolsaService.criar(new bolsahemocomponente(
+				null, "HU6-EM-TRANSITO", "B+", "Plaquetas", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "EM_TRANSITO", requisicao));
+		bolsahemocomponente desatualizada = new bolsahemocomponente(
+				null, "HU6-DESATUALIZADA", "AB+", "Plasma", 250,
+				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null);
+		desatualizada.setTemperaturaAtual(new java.math.BigDecimal("4.0"));
+		desatualizada.setUltimaLeituraTemperatura(java.time.LocalDateTime.now().minusSeconds(30));
+		bolsaService.criar(desatualizada);
+		bolsaService.criar(new bolsahemocomponente(
+				null, "HU6-VENCIDA", "B+", "Plaquetas", 250,
+				LocalDate.now().minusDays(30), LocalDate.now().minusDays(1), "VENCIDA", null));
+
+		mockMvc.perform(get("/monitoramento/temperatura"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("LEITURA DESATUALIZADA")))
+				.andExpect(content().string(containsString("HU6-DESATUALIZADA")));
+
+		monitoramentoTemperaturaService.atualizarLeituras();
+
+		for (String codigo : new String[]{
+				disponivel.getCodigo(), alocada.getCodigo(), emTransito.getCodigo()}) {
+			bolsahemocomponente monitorada = bolsaService.listarTodos().stream()
+					.filter(bolsa -> codigo.equals(bolsa.getCodigo()))
+					.findFirst().orElseThrow();
+			org.junit.jupiter.api.Assertions.assertNotNull(monitorada.getTemperaturaAtual());
+			org.junit.jupiter.api.Assertions.assertNotNull(monitorada.getUltimaLeituraTemperatura());
+			org.junit.jupiter.api.Assertions.assertTrue(
+					monitorada.getTemperaturaAtual().compareTo(new java.math.BigDecimal("0.0")) >= 0);
+			org.junit.jupiter.api.Assertions.assertTrue(
+					monitorada.getTemperaturaAtual().compareTo(new java.math.BigDecimal("8.0")) <= 0);
+		}
+
+		mockMvc.perform(get("/monitoramento/temperatura"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("monitoramento-temperatura"))
+				.andExpect(content().string(containsString("Faixa simulada esperada: 1 °C a 7 °C")))
+				.andExpect(content().string(containsString("HU6-DISPONIVEL")))
+				.andExpect(content().string(containsString("HU6-ALOCADA")))
+				.andExpect(content().string(containsString("HU6-EM-TRANSITO")))
+				.andExpect(content().string(not(containsString("HU6-VENCIDA"))))
+				.andExpect(content().string(containsString("Última leitura:")));
+	}
+
+	@Test
+	void permiteCadastrarUsuariosDiferentesComASenha() throws Exception {
+		new org.springframework.jdbc.core.JdbcTemplate(dataSource).execute(
+				"ALTER TABLE users ADD CONSTRAINT UK5IIM42DXO1FE4CVGYQ67IU2BA UNIQUE (senha)");
+		new ResourceDatabasePopulator(new ClassPathResource("schema.sql")).execute(dataSource);
+
+		mockMvc.perform(post("/salvar")
+						.param("nome", "Usuário Primeiro")
+						.param("email", "primeiro-hu8@example.test")
+						.param("senha", "86753091234"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+
+		mockMvc.perform(post("/salvar")
+						.param("nome", "Usuário Segundo")
+						.param("email", "segundo-hu8@example.test")
+						.param("senha", "86753091234"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
+	void emailDuplicadoRetornaErroDeValidacaoEmVezDeErroInterno() throws Exception {
+		mockMvc.perform(post("/salvar")
+						.param("nome", "Usuário Original")
+						.param("email", "email-duplicado-hu8@example.test")
+						.param("senha", "12345678901"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+
+		mockMvc.perform(post("/salvar")
+						.param("nome", "Outro Usuário")
+						.param("email", "email-duplicado-hu8@example.test")
+						.param("senha", "10987654321"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("cadastrar"))
+				.andExpect(content().string(containsString("Este e-mail já está cadastrado.")));
 	}
 
 	@Test

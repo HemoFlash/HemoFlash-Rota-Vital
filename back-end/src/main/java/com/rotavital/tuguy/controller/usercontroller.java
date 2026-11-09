@@ -6,6 +6,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import com.rotavital.tuguy.model.user;
 import com.rotavital.tuguy.service.bolsahemocomponenteservice;
+import com.rotavital.tuguy.service.indicadoresredeservice;
 import com.rotavital.tuguy.service.requisicaoservice;
 import com.rotavital.tuguy.service.userservice;
 import com.rotavital.tuguy.ordenacao.prioridadeutil;
@@ -18,13 +19,16 @@ public class usercontroller {
     private final userservice Service;
     private final requisicaoservice RequisicaoService;
     private final bolsahemocomponenteservice BolsaService;
+    private final indicadoresredeservice IndicadoresService;
 
     // instância de ClienteService é injetada pelo Spring no controller
     public usercontroller(userservice service, requisicaoservice requisicaoService,
-                          bolsahemocomponenteservice bolsaService) {
+                          bolsahemocomponenteservice bolsaService,
+                          indicadoresredeservice indicadoresService) {
         this.Service = service;
         this.RequisicaoService = requisicaoService;
         this.BolsaService = bolsaService;
+        this.IndicadoresService = indicadoresService;
     }
 
     @GetMapping("/")
@@ -57,12 +61,15 @@ public class usercontroller {
     @GetMapping("/menu")
     public String listar(Model model) {
 
+        var requisicoes = RequisicaoService.listarTodos();
+        var bolsas = BolsaService.listarTodos();
         model.addAttribute("users", Service.listarTodos());
-        model.addAttribute("requisicoes", RequisicaoService.listarTodos().stream()
+        model.addAttribute("requisicoes", requisicoes.stream()
                 .sorted(prioridadeutil.COMPARADOR)
                 .toList());
-        model.addAttribute("bolsas", BolsaService.listarTodos());
+        model.addAttribute("bolsas", bolsas);
         model.addAttribute("codigosAlocadosPorRequisicao", BolsaService.codigosAlocadosPorRequisicao());
+        model.addAttribute("indicadores", IndicadoresService.calcular(bolsas, requisicoes));
 
         // manda renderizar resources/templates/login.html
         // passando para esse html o model criado.
@@ -70,11 +77,18 @@ public class usercontroller {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid user user, BindingResult result) {
+    public String salvar(@Valid user user, BindingResult result, Model model) {
         if (result.hasErrors()) {
+            model.addAttribute("user", user);
             return "cadastrar";
         }
-        Service.salvar(user);
+        try {
+            Service.salvar(user);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("user", user);
+            model.addAttribute("erroCadastro", e.getMessage());
+            return "cadastrar";
+        }
         return "redirect:/login";
     }
     
