@@ -1,29 +1,39 @@
 package com.rotavital.tuguy.controller;
 
 import com.rotavital.tuguy.model.bolsahemocomponente;
+import com.rotavital.tuguy.model.hospital;
 import com.rotavital.tuguy.model.requisicao;
 import com.rotavital.tuguy.service.bolsahemocomponenteservice;
+import com.rotavital.tuguy.service.hospitalservice;
 import com.rotavital.tuguy.service.requisicaoservice;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-
 @Controller
 public class requisicaocontroller {
 
     private final requisicaoservice Service;
     private final bolsahemocomponenteservice BolsaService;
+    private final hospitalservice HospitalService;
 
-    public requisicaocontroller(requisicaoservice service, bolsahemocomponenteservice bolsaService) {
+    public requisicaocontroller(requisicaoservice service, bolsahemocomponenteservice bolsaService,
+                                hospitalservice hospitalService) {
         this.Service = service;
         this.BolsaService = bolsaService;
+        this.HospitalService = hospitalService;
+    }
+
+    @ModelAttribute("hospitais")
+    public List<hospital> hospitais() {
+        return HospitalService.listarTodos();
     }
 
     @GetMapping("/requisicoes")
@@ -42,6 +52,10 @@ public class requisicaocontroller {
         requisicao requisicao = Service.buscarPorId(requisicaoId);
         model.addAttribute("requisicao", requisicao);
         model.addAttribute("bolsas", BolsaService.testeABO(requisicao.getTipoSanguineo()));
+        model.addAttribute("podePlanejarRota", BolsaService.temBolsaAlocada(requisicaoId));
+        if (requisicao.getHospitalDestino() != null) {
+            model.addAttribute("hospitalDestino", HospitalService.buscarPorCodigo(requisicao.getHospitalDestino()));
+        }
         return "bolsas";
     }
 
@@ -69,39 +83,50 @@ public class requisicaocontroller {
     @GetMapping("/bolsas/nova")
     public String novaBolsa(Model model) {
         bolsahemocomponente bolsa = new bolsahemocomponente();
-        bolsa.setStatus("DISPONIVEL");
         model.addAttribute("bolsa", bolsa);
         return "bolsa-form";
     }
 
     @PostMapping("/bolsas")
     public String salvarBolsa(@Valid bolsahemocomponente bolsa, BindingResult result, Model model,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false)
+                              Long hospitalEstoqueId,
                               RedirectAttributes redirectAttributes) {
-        return salvarBolsaValidada(bolsa, result, model, redirectAttributes);
+        return salvarBolsaValidada(bolsa, result, model, hospitalEstoqueId, redirectAttributes);
     }
 
     @PostMapping("/bolsas/{id}")
     public String atualizarBolsa(@PathVariable Long id, @Valid bolsahemocomponente bolsa,
-                                 BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+                                 BindingResult result, Model model,
+                                 @org.springframework.web.bind.annotation.RequestParam(required = false)
+                                 Long hospitalEstoqueId,
+                                 RedirectAttributes redirectAttributes) {
         bolsa.setId(id);
-        return salvarBolsaValidada(bolsa, result, model, redirectAttributes);
+        return salvarBolsaValidada(bolsa, result, model, hospitalEstoqueId, redirectAttributes);
     }
 
     private String salvarBolsaValidada(bolsahemocomponente bolsa, BindingResult result, Model model,
-                                       RedirectAttributes redirectAttributes) {
+                                       Long hospitalEstoqueId, RedirectAttributes redirectAttributes) {
         model.addAttribute("bolsa", bolsa);
 
+        if (hospitalEstoqueId == null) {
+            model.addAttribute("erroHospitalEstoque", "Selecione o hospital onde a bolsa está em estoque.");
+            return "bolsa-form";
+        }
         if (result.hasErrors()) {
             return "bolsa-form";
         }
 
         try {
+            hospital hospitalOrigem = HospitalService.buscarPorId(hospitalEstoqueId);
+            bolsa.setHospitalEstoque(hospitalOrigem);
             if (bolsa.getId() == null) {
+                bolsa.setCodigo(null);
                 BolsaService.criar(bolsa);
             } else {
-                bolsa.setRequisicao(BolsaService.buscarPorId(bolsa.getId())
-                        .orElseThrow(() -> new RuntimeException("Bolsa não encontrada com o id: " + bolsa.getId()))
-                        .getRequisicao());
+                bolsahemocomponente existente = BolsaService.buscarPorId(bolsa.getId())
+                        .orElseThrow(() -> new RuntimeException("Bolsa não encontrada com o id: " + bolsa.getId()));
+                bolsa.setRequisicao(existente.getRequisicao());
                 BolsaService.atualizar(bolsa.getId(), bolsa);
             }
             return "redirect:/menu";
@@ -126,6 +151,10 @@ public class requisicaocontroller {
 
     @PostMapping("/requisicoes")
     public String salvar(@Valid requisicao requisicao, BindingResult result) {
+        if (!HospitalService.existePorCodigo(requisicao.getHospitalDestino())) {
+            result.rejectValue("hospitalDestino", "hospitalDestino.invalido",
+                    "Selecione um hospital cadastrado.");
+        }
         if (result.hasErrors()) {
             return "requisicao";
         }
@@ -138,6 +167,10 @@ public class requisicaocontroller {
     public String atualizarRequisicao(@PathVariable Long id, @Valid requisicao requisicao,
                                       BindingResult result) {
         requisicao.setId(id);
+        if (!HospitalService.existePorCodigo(requisicao.getHospitalDestino())) {
+            result.rejectValue("hospitalDestino", "hospitalDestino.invalido",
+                    "Selecione um hospital cadastrado.");
+        }
         if (result.hasErrors()) {
             return "requisicao";
         }

@@ -7,9 +7,9 @@
 
 ## Sobre o projeto
 
-**Rota Vital** é uma aplicação web que apoia a rede de sangue (inspirada no fluxo da Hemorrede/SUS: coleta/doação → hemocentro → estoque → hospitais) na gestão e distribuição de hemocomponentes.
+**Rota Vital** é uma aplicação web que apoia a rede de sangue na gestão e distribuição de hemocomponentes entre hospitais.
 
-O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas de distribuição respeitando a cadeia fria e as janelas de tempo, e monitora temperatura e rede em painéis.
+O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas entre hospitais considerando a modalidade de transporte, os limites demonstrativos de conservação do componente e a validade, e monitora periodicamente a temperatura de cada veículo em transporte.
 
 > ⚠️ O projeto utiliza **exclusivamente dados sintéticos** (sem dados reais de doadores/pacientes — LGPD). A telemetria de temperatura/GPS é simulada e a compatibilidade ABO/Rh possui finalidade **didática**, não substituindo protocolos clínicos. Não há integração com sistemas oficiais da Hemorrede.
 
@@ -18,7 +18,7 @@ O sistema gerencia o estoque por tipo e componente, recebe requisições dos hos
 | Campo | Descrição |
 |---|---|
 | **Problema central** | Garantir o componente certo (compatível e válido), no lugar certo, no tempo certo e na temperatura certa — evitando desabastecimento, descarte por vencimento e risco ao paciente. |
-| **Produto esperado** | App web que gerencia estoque, recebe requisições hospitalares, aloca bolsas por compatibilidade + FEFO, calcula rotas respeitando cadeia fria/janelas de tempo, e exibe painéis de estoque/demanda e monitoramento. |
+| **Produto esperado** | App web que gerencia estoque, recebe requisições hospitalares, aloca bolsas por compatibilidade + FEFO, calcula rotas entre hospitais respeitando a cadeia fria e a validade, e exibe painéis de estoque/demanda e monitoramento. |
 | **Complexidade** | Média (escopo controlado: poucos componentes, grafo limitado, dados sintéticos). |
 | **Limites de escopo** | Só dados sintéticos; telemetria simulada; compatibilidade ABO/Rh didática; grafo de rotas limitado; sem integração com sistemas oficiais. |
 
@@ -64,6 +64,15 @@ docker compose up -d --build
 ```
 
 O Compose inicia a aplicação e o PostgreSQL; a aplicação aguarda o banco ficar saudável. A configuração usa as variáveis do `.env`, e o `.env` local não deve ser versionado. Consulte o estado dos serviços com `docker compose ps` e a saúde da aplicação em **http://localhost:8080/actuator/health**. Para encerrar, execute `docker compose down`.
+
+### Demonstração do planejamento de rota (HU05)
+
+1. Acesse **Hospitais** para consultar a rede ou cadastrar um hospital. Os hospitais de demonstração são cadastrados automaticamente. O sistema gera o código a partir das três primeiras letras do município e uma sequência de quatro dígitos (por exemplo, `REC0001`, `REC0002` ou `PET0001`).
+2. Crie uma requisição e selecione o hospital de destino.
+3. Cadastre uma bolsa informando em qual hospital ela está no estoque; depois, aloque-a à requisição.
+4. No painel ou na tela de alocação, clique em **Planejar rota** e escolha transporte refrigerado ou não refrigerado.
+
+O sistema calcula a rota entre o hospital de estoque da bolsa e o destino da requisição usando distâncias sintéticas em [PlanejamentoRotaService.java](./back-end/src/main/java/com/rotavital/tuguy/service/PlanejamentoRotaService.java). A duração estimada é comparada com limites demonstrativos por componente/modalidade — hemácias: 24 h refrigerado/2 h não refrigerado; plasma: 12 h/1 h; plaquetas: 6 h/1 h — e com a data de validade cadastrada. A matriz atual conecta Recife–Olinda, Recife–Caruaru, Olinda–Caruaru e Caruaru–Petrolina; novos hospitais podem ser cadastrados com códigos sequenciais, mas seus trechos precisam ser adicionados à matriz para haver rota. Esses valores são apenas demonstrativos, não clínicos, e não substituem protocolos de transporte ou validação da cadeia fria. Na tela **Monitoramento de temperatura**, registre cada veículo ao iniciar o transporte e conclua-o ao chegar ao destino. Cada veículo ativo recebe uma leitura sintética própria a cada 10 segundos; isso não representa monitoramento por sensores reais nem a temperatura individual de cada bolsa.
 
 ---
 

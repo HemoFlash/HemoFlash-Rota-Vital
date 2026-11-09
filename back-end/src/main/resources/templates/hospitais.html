@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,51 +13,38 @@
     tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
   </script>
 </head>
-<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+<body class="rv-app bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <div class="max-w-6xl mx-auto p-8 space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold text-hemo-textMain">Hospitais Cadastrados</h2>
-        <p class="text-sm text-hemo-textSub">Unidades receptoras e centros de atendimento vinculados ao hemocentro</p>
+        <p class="text-sm text-hemo-textSub">Hospitais com estoque de hemocomponentes na rede</p>
       </div>
-      <a href="/menu" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
+      <a href="/hospitais/novo" class="px-4 py-2 bg-hemo-moss hover:bg-hemo-mossHover text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2">
         <i class="fa-solid fa-plus"></i>
         <span>Novo Hospital</span>
       </a>
     </div>
 
+    <p class="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800" th:if="${sucessoHospital}" th:text="${sucessoHospital}"></p>
+    <p class="rounded-xl bg-slate-100 p-4 text-sm text-slate-600" th:if="${#lists.isEmpty(hospitais)}">Nenhum hospital cadastrado.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-hemo-textMain">Hospital Central de Trauma</h3>
-          <span class="px-2.5 py-1 bg-rose-100 text-rose-700 text-[11px] font-bold rounded-full">Emergência</span>
+      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm" th:each="hospital : ${hospitais}">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="font-bold text-hemo-textMain" th:text="${hospital.nome}">Hospital</h3>
+          <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-full">Ativo</span>
         </div>
         <div class="mt-4 space-y-2 text-sm text-hemo-textSub">
-          <p>Concentração: 4 pedidos ativos</p>
-          <p>Último envio: hoje, 08h00</p>
-        </div>
-      </div>
-      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-hemo-textMain">Incor - Instituto do Coração</h3>
-          <span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">Urgente</span>
-        </div>
-        <div class="mt-4 space-y-2 text-sm text-hemo-textSub">
-          <p>Concentração: 2 pedidos ativos</p>
-          <p>Último envio: ontem, 18h10</p>
-        </div>
-      </div>
-      <div class="bg-white p-5 rounded-2xl border border-hemo-border shadow-sm">
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-hemo-textMain">Hospital das Clínicas</h3>
-          <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-full">Normal</span>
-        </div>
-        <div class="mt-4 space-y-2 text-sm text-hemo-textSub">
-          <p>Concentração: 1 pedido ativo</p>
-          <p>Último envio: 26/10/2025</p>
+          <p th:text="|Município: ${hospital.municipio}|">Município</p>
+          <p th:text="|Código: ${hospital.codigo}|">Código</p>
         </div>
       </div>
     </div>
+    <p class="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
+      As distâncias entre os hospitais disponíveis são sintéticas e usadas apenas para demonstração.
+      Para cadastrar novos trechos, atualize a matriz no PlanejamentoRotaService.
+    </p>
   </div>
 </body>
 </html>

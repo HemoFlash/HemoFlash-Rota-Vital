@@ -2,7 +2,10 @@ package com.rotavital.tuguy;
 
 import com.rotavital.tuguy.model.requisicao;
 import com.rotavital.tuguy.model.bolsahemocomponente;
+import com.rotavital.tuguy.model.hospital;
+import com.rotavital.tuguy.model.veiculotransporte;
 import com.rotavital.tuguy.service.bolsahemocomponenteservice;
+import com.rotavital.tuguy.service.hospitalservice;
 import com.rotavital.tuguy.service.monitoramentotemperaturaservice;
 import com.rotavital.tuguy.service.requisicaoservice;
 import org.junit.jupiter.api.Test;
@@ -46,6 +49,9 @@ class TuguyApplicationTests {
 	private monitoramentotemperaturaservice monitoramentoTemperaturaService;
 
 	@Autowired
+	private hospitalservice hospitalService;
+
+	@Autowired
 	private DataSource dataSource;
 
 	@Test
@@ -63,7 +69,7 @@ class TuguyApplicationTests {
 				null, "HU7-BMINUS", "B-", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null));
 		requisicaoService.salvar(
-				new requisicao(null, "Pedido HU07", "Demanda para indicador", "Alta", "B-"));
+				requisicaoDeTeste("Pedido HU07", "Demanda para indicador", "Alta", "B-"));
 
 		mockMvc.perform(get("/menu"))
 				.andExpect(status().isOk())
@@ -77,57 +83,56 @@ class TuguyApplicationTests {
 	}
 
 	@Test
-	void painelDeTemperaturaExibeLeiturasSinteticasDeBolsasDisponiveisEAlocadas() throws Exception {
-		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Transporte HU06", "Bolsa em monitoramento", "Alta", "A+"));
-		bolsahemocomponente disponivel = bolsaService.criar(new bolsahemocomponente(
-				null, "HU6-DISPONIVEL", "O+", "Hemácias", 250,
-				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null));
-		bolsahemocomponente alocada = bolsaService.criar(new bolsahemocomponente(
-				null, "HU6-ALOCADA", "A+", "Plasma", 250,
-				LocalDate.now(), LocalDate.now().plusDays(30), "ALOCADA", requisicao));
-		bolsahemocomponente emTransito = bolsaService.criar(new bolsahemocomponente(
-				null, "HU6-EM-TRANSITO", "B+", "Plaquetas", 250,
-				LocalDate.now(), LocalDate.now().plusDays(30), "EM_TRANSITO", requisicao));
-		bolsahemocomponente desatualizada = new bolsahemocomponente(
-				null, "HU6-DESATUALIZADA", "AB+", "Plasma", 250,
-				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", null);
-		desatualizada.setTemperaturaAtual(new java.math.BigDecimal("4.0"));
-		desatualizada.setUltimaLeituraTemperatura(java.time.LocalDateTime.now().minusSeconds(30));
-		bolsaService.criar(desatualizada);
-		bolsaService.criar(new bolsahemocomponente(
-				null, "HU6-VENCIDA", "B+", "Plaquetas", 250,
-				LocalDate.now().minusDays(30), LocalDate.now().minusDays(1), "VENCIDA", null));
+	void painelMonitoraCadaVeiculoEmTransporteEDeixaDeMonitorarAoConcluir() throws Exception {
+		mockMvc.perform(post("/monitoramento/temperatura/veiculos")
+						.param("codigo", "HU6-VEICULO-01")
+						.param("descricao", "Caminhão refrigerado"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/monitoramento/temperatura"));
 
-		mockMvc.perform(get("/monitoramento/temperatura"))
-				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("LEITURA DESATUALIZADA")))
-				.andExpect(content().string(containsString("HU6-DESATUALIZADA")));
-
-		monitoramentoTemperaturaService.atualizarLeituras();
-
-		for (String codigo : new String[]{
-				disponivel.getCodigo(), alocada.getCodigo(), emTransito.getCodigo()}) {
-			bolsahemocomponente monitorada = bolsaService.listarTodos().stream()
-					.filter(bolsa -> codigo.equals(bolsa.getCodigo()))
-					.findFirst().orElseThrow();
-			org.junit.jupiter.api.Assertions.assertNotNull(monitorada.getTemperaturaAtual());
-			org.junit.jupiter.api.Assertions.assertNotNull(monitorada.getUltimaLeituraTemperatura());
-			org.junit.jupiter.api.Assertions.assertTrue(
-					monitorada.getTemperaturaAtual().compareTo(new java.math.BigDecimal("0.0")) >= 0);
-			org.junit.jupiter.api.Assertions.assertTrue(
-					monitorada.getTemperaturaAtual().compareTo(new java.math.BigDecimal("8.0")) <= 0);
-		}
+		veiculotransporte segundo = new veiculotransporte();
+		segundo.setCodigo("HU6-VEICULO-02");
+		segundo.setDescricao("Van térmica");
+		monitoramentoTemperaturaService.registrarVeiculoEmTransporte(segundo);
 
 		mockMvc.perform(get("/monitoramento/temperatura"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("monitoramento-temperatura"))
 				.andExpect(content().string(containsString("Faixa simulada esperada: 1 °C a 7 °C")))
-				.andExpect(content().string(containsString("HU6-DISPONIVEL")))
-				.andExpect(content().string(containsString("HU6-ALOCADA")))
-				.andExpect(content().string(containsString("HU6-EM-TRANSITO")))
-				.andExpect(content().string(not(containsString("HU6-VENCIDA"))))
-				.andExpect(content().string(containsString("Última leitura:")));
+				.andExpect(content().string(containsString("HU6-VEICULO-01")))
+				.andExpect(content().string(containsString("HU6-VEICULO-02")))
+				.andExpect(content().string(containsString("Em transporte")))
+				.andExpect(content().string(not(containsString("Código da bolsa"))));
+
+		monitoramentoTemperaturaService.atualizarLeituras();
+		for (veiculotransporte monitorado : monitoramentoTemperaturaService.listarMonitorados()) {
+			if (monitorado.getCodigo().startsWith("HU6-VEICULO-")) {
+				org.junit.jupiter.api.Assertions.assertNotNull(monitorado.getTemperaturaAtual());
+				org.junit.jupiter.api.Assertions.assertNotNull(monitorado.getUltimaLeituraTemperatura());
+				org.junit.jupiter.api.Assertions.assertTrue(
+						monitorado.getTemperaturaAtual().compareTo(new java.math.BigDecimal("0.0")) >= 0);
+				org.junit.jupiter.api.Assertions.assertTrue(
+						monitorado.getTemperaturaAtual().compareTo(new java.math.BigDecimal("8.0")) <= 0);
+			}
+		}
+
+		Long primeiroId = monitoramentoTemperaturaService.listarMonitorados().stream()
+				.filter(veiculo -> "HU6-VEICULO-01".equals(veiculo.getCodigo()))
+				.map(veiculotransporte::getId)
+				.findFirst()
+				.orElseThrow();
+		monitoramentoTemperaturaService.concluirTransporte(primeiroId);
+		org.junit.jupiter.api.Assertions.assertFalse(
+				monitoramentoTemperaturaService.listarMonitorados().stream()
+						.anyMatch(veiculo -> "HU6-VEICULO-01".equals(veiculo.getCodigo())));
+
+		veiculotransporte reutilizado = new veiculotransporte();
+		reutilizado.setCodigo("HU6-VEICULO-01");
+		reutilizado.setDescricao("Caminhão refrigerado");
+		monitoramentoTemperaturaService.registrarVeiculoEmTransporte(reutilizado);
+		org.junit.jupiter.api.Assertions.assertTrue(
+				monitoramentoTemperaturaService.listarMonitorados().stream()
+						.anyMatch(veiculo -> "HU6-VEICULO-01".equals(veiculo.getCodigo())));
 	}
 
 	@Test
@@ -180,58 +185,145 @@ class TuguyApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(view().name("bolsa-form"))
 				.andExpect(content().string(containsString("Nova bolsa")))
+				.andExpect(content().string(containsString("Hospital onde a bolsa está em estoque")))
 				.andExpect(content().string(not(containsString("Requisição associada"))));
 	}
 
 	@Test
+	void hospitalsArePersistedAndListedForStockAndDestinationSelection() throws Exception {
+		mockMvc.perform(get("/hospitais/novo"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(not(containsString("name=\"codigo\""))));
+
+		mockMvc.perform(get("/hospitais"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("hospitais"))
+				.andExpect(content().string(containsString("Hospital Recife")));
+
+		mockMvc.perform(post("/hospitais")
+						.param("nome", "Hospital de Teste da Rede")
+						.param("municipio", "Recife")
+						.param("codigo", "CODIGO-IGNORADO"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/hospitais"));
+
+		mockMvc.perform(get("/requisicoes"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("Hospital de Teste da Rede")));
+		hospital cadastrado = hospitalService.listarTodos().stream()
+				.filter(item -> "Hospital de Teste da Rede".equals(item.getNome()))
+				.findFirst()
+				.orElseThrow();
+		org.junit.jupiter.api.Assertions.assertTrue(cadastrado.getCodigo().matches("REC\\d{4}"));
+	}
+
+	@Test
+	void codigosDeHospitaisRecebemSequenciaPorMunicipio() {
+		hospital segundoRecife = hospitalService.cadastrar(
+				new hospital(null, "Hospital Recife Unidade B", "Recife"));
+		hospital terceiroRecife = hospitalService.cadastrar(
+				new hospital(null, "Hospital Recife Unidade C", "Recife"));
+
+		org.junit.jupiter.api.Assertions.assertTrue(segundoRecife.getCodigo().matches("REC\\d{4}"));
+		int segundaSequencia = Integer.parseInt(segundoRecife.getCodigo().substring(3));
+		int terceiraSequencia = Integer.parseInt(terceiroRecife.getCodigo().substring(3));
+		org.junit.jupiter.api.Assertions.assertEquals(
+				segundaSequencia + 1, terceiraSequencia);
+	}
+
+	@Test
+	void sidebarPermaneceNasPaginasOperacionais() throws Exception {
+		requisicao requisicao = salvarRequisicaoComDestino("Sidebar rota", "REC0001");
+		criarBolsaAlocada(requisicao, "SIDEBAR-ROTA-" + requisicao.getId(),
+				"OLI0001", "Hemácias", LocalDate.now().plusDays(30));
+
+		for (String url : new String[]{
+				"/menu",
+				"/requisicoes",
+				"/requisicoes/" + requisicao.getId() + "/alocar-bolsa",
+				"/bolsas",
+				"/bolsas/nova",
+				"/hospitais",
+				"/hospitais/novo",
+				"/requisicoes/" + requisicao.getId() + "/rota",
+				"/monitoramento/temperatura"}) {
+			mockMvc.perform(get(url))
+					.andExpect(status().isOk())
+					.andExpect(content().string(containsString("class=\"rv-sidebar\"")))
+					.andExpect(content().string(containsString("Monitoramento de temperatura")));
+		}
+	}
+
+	@Test
 	void formularioSalvaBolsaSemRequisicaoAssociada() throws Exception {
+		long ultimoIdAntes = bolsaService.listarTodos().stream()
+				.mapToLong(bolsahemocomponente::getId)
+				.max()
+				.orElse(0);
 		mockMvc.perform(post("/bolsas")
-						.param("codigo", "BOLSA-TESTE")
+						.param("codigo", "ID-FORJADO")
+						.param("status", "ALOCADA")
 						.param("tipoSanguineo", "O+")
 						.param("componente", "Plasma")
 						.param("quantidadeMl", "250")
 						.param("dataColeta", "2026-10-18")
 						.param("dataValidade", "2026-11-18")
-						.param("status", "DISPONIVEL"))
+						.param("hospitalEstoqueId", hospitalId("REC0001")))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
+
+		bolsahemocomponente bolsa = bolsaService.listarTodos().stream()
+				.filter(item -> item.getId() > ultimoIdAntes
+						&& "O+".equals(item.getTipoSanguineo())
+						&& "Plasma".equals(item.getComponente())
+						&& Integer.valueOf(250).equals(item.getQuantidadeMl()))
+				.findFirst()
+				.orElseThrow();
+		org.junit.jupiter.api.Assertions.assertNotNull(bolsa.getId());
+		org.junit.jupiter.api.Assertions.assertEquals(ultimoIdAntes + 1, bolsa.getId());
+		org.junit.jupiter.api.Assertions.assertEquals("BOLSA-" + bolsa.getId(), bolsa.getCodigo());
+		org.junit.jupiter.api.Assertions.assertEquals("DISPONIVEL", bolsa.getStatus());
 
 		mockMvc.perform(get("/menu"))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("BOLSA-TESTE")));
-		org.junit.jupiter.api.Assertions.assertTrue(
-				bolsaService.listarTodos().stream()
-						.filter(bolsa -> "BOLSA-TESTE".equals(bolsa.getCodigo()))
-						.findFirst()
-						.orElseThrow()
-						.getRequisicao() == null);
+				.andExpect(content().string(containsString("Bolsas cadastradas")))
+				.andExpect(content().string(containsString(String.valueOf(bolsa.getId()))))
+				.andExpect(content().string(containsString("O+")))
+				.andExpect(content().string(containsString("250 ml")))
+				.andExpect(content().string(containsString("Hospital Recife")))
+				.andExpect(content().string(containsString("18/11/2026")));
+		org.junit.jupiter.api.Assertions.assertNull(bolsa.getRequisicao());
+		org.junit.jupiter.api.Assertions.assertEquals("REC0001", bolsa.getHospitalEstoque().getCodigo());
 	}
 
 	@Test
-	void formularioRejeitaCodigoDuplicadoDeBolsa() throws Exception {
+	void formularioDeBolsaExigeHospitalDeEstoque() throws Exception {
 		mockMvc.perform(post("/bolsas")
-					.param("codigo", "BOLSA-DUPLICADA")
-					.param("tipoSanguineo", "O+")
-					.param("componente", "Plasma")
-					.param("quantidadeMl", "250")
-					.param("dataColeta", "2026-10-18")
-					.param("dataValidade", "2026-11-18")
-					.param("status", "DISPONIVEL"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/menu"));
+						.param("tipoSanguineo", "O+")
+						.param("componente", "Hemácias")
+						.param("quantidadeMl", "250")
+						.param("dataColeta", LocalDate.now().toString())
+						.param("dataValidade", LocalDate.now().plusDays(10).toString()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("bolsa-form"))
+				.andExpect(content().string(containsString("Selecione o hospital onde a bolsa está em estoque.")));
+	}
 
-		mockMvc.perform(post("/bolsas")
-					.param("codigo", "BOLSA-DUPLICADA")
-					.param("tipoSanguineo", "A+")
-					.param("componente", "Hemácias")
-					.param("quantidadeMl", "300")
-					.param("dataColeta", "2026-10-19")
-					.param("dataValidade", "2026-11-19")
-					.param("status", "DISPONIVEL"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/menu"))
-				.andExpect(flash().attribute("erroBolsa",
-						"Já existe uma bolsa cadastrada com este código."));
+	@Test
+	void cadastroEdicaoNaoExibemCodigoNemStatusParaEdicaoManual() throws Exception {
+		mockMvc.perform(get("/bolsas/nova"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(not(containsString("name=\"codigo\""))))
+				.andExpect(content().string(not(containsString("name=\"status\""))));
+
+		bolsahemocomponente existente = new bolsahemocomponente(
+				null, "BOLSA-SEM-CAMPOS-" + System.nanoTime(), "A+", "Plasma", 250,
+				LocalDate.now(), LocalDate.now().plusDays(10), "DISPONIVEL", null);
+		bolsaService.criar(existente);
+		mockMvc.perform(get("/bolsas/{id}/editar", existente.getId()))
+				.andExpect(status().isOk())
+				.andExpect(content().string(not(containsString("name=\"codigo\""))))
+				.andExpect(content().string(not(containsString("name=\"status\""))));
 	}
 
 	@Test
@@ -244,7 +336,8 @@ class TuguyApplicationTests {
 						.param("titulo", "Requisição com tipo")
 						.param("descricao", "Teste de cadastro do tipo sanguíneo")
 						.param("prioridade", "Alta")
-						.param("tipoSanguineo", "B-"))
+						.param("tipoSanguineo", "B-")
+						.param("hospitalDestino", "REC0001"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
 
@@ -255,9 +348,22 @@ class TuguyApplicationTests {
 	}
 
 	@Test
+	void formularioRejeitaHospitalDeDestinoNaoCadastrado() throws Exception {
+		mockMvc.perform(post("/requisicoes")
+						.param("titulo", "Destino inválido")
+						.param("descricao", "Teste de validação do hospital de destino")
+						.param("prioridade", "Alta")
+						.param("tipoSanguineo", "B-")
+						.param("hospitalDestino", "HOSPITAL_INEXISTENTE"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("requisicao"))
+				.andExpect(content().string(containsString("Selecione um hospital cadastrado.")));
+	}
+
+	@Test
 	void requisicaoPodeSerEditadaERemovida() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição editável", "Descrição original", "Baixa", "O+"));
+				requisicaoDeTeste("Requisição editável", "Descrição original", "Baixa", "O+"));
 
 		mockMvc.perform(get("/requisicoes/{id}/editar", requisicao.getId()))
 				.andExpect(status().isOk())
@@ -268,13 +374,15 @@ class TuguyApplicationTests {
 						.param("titulo", "Requisição atualizada")
 						.param("descricao", "Descrição modificada")
 						.param("prioridade", "Alta")
-						.param("tipoSanguineo", "AB+"))
+						.param("tipoSanguineo", "AB+")
+						.param("hospitalDestino", "OLI0001"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
 
 		requisicao atualizada = requisicaoService.buscarPorId(requisicao.getId());
 		org.junit.jupiter.api.Assertions.assertEquals("Requisição atualizada", atualizada.getTitulo());
 		org.junit.jupiter.api.Assertions.assertEquals("AB+", atualizada.getTipoSanguineo());
+		org.junit.jupiter.api.Assertions.assertEquals("OLI0001", atualizada.getHospitalDestino());
 
 		mockMvc.perform(post("/requisicoes/{id}/remover", requisicao.getId()))
 				.andExpect(status().is3xxRedirection())
@@ -286,7 +394,7 @@ class TuguyApplicationTests {
 	@Test
 	void requisicaoComBolsaAssociadaNaoPodeSerRemovida() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição vinculada", "Possui uma bolsa associada", "Alta", "O-"));
+				requisicaoDeTeste("Requisição vinculada", "Possui uma bolsa associada", "Alta", "O-"));
 		bolsaService.criar(new bolsahemocomponente(
 				null, "BOLSA-VINCULADA-" + requisicao.getId(), "O-", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", requisicao));
@@ -303,7 +411,7 @@ class TuguyApplicationTests {
 	@Test
 	void bolsaPodeSerEditadaERemovida() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição da bolsa editável", "Requisição para teste CRUD", "Alta", "A+"));
+				requisicaoDeTeste("Requisição da bolsa editável", "Requisição para teste CRUD", "Alta", "A+"));
 		bolsahemocomponente bolsa = bolsaService.criar(new bolsahemocomponente(
 				null, "BOLSA-EDITAVEL-" + requisicao.getId(), "A+", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(30), "DISPONIVEL", requisicao));
@@ -320,7 +428,7 @@ class TuguyApplicationTests {
 						.param("quantidadeMl", "375")
 						.param("dataColeta", LocalDate.now().toString())
 						.param("dataValidade", LocalDate.now().plusDays(30).toString())
-						.param("status", "DISPONIVEL"))
+						.param("hospitalEstoqueId", hospitalId("REC0001")))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
 
@@ -336,7 +444,7 @@ class TuguyApplicationTests {
 	@Test
 	void paginaDeAlocacaoExibeSomenteBolsasCompativeisComTipoDaRequisicao() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição tipo O negativo", "Teste de compatibilidade ABO e Rh", "Alta", "O-"));
+				requisicaoDeTeste("Requisição tipo O negativo", "Teste de compatibilidade ABO e Rh", "Alta", "O-"));
 		LocalDate coleta = LocalDate.now();
 		LocalDate validade = coleta.plusDays(30);
 
@@ -360,7 +468,7 @@ class TuguyApplicationTests {
 	@Test
 	void bolsasCompativeisNaAlocacaoSaoOrdenadasPorValidadeCrescente() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição ordenação FEFO", "Teste de validade FEFO", "Alta", "O-"));
+				requisicaoDeTeste("Requisição ordenação FEFO", "Teste de validade FEFO", "Alta", "O-"));
 		LocalDate coleta = LocalDate.now();
 		bolsaService.criar(new bolsahemocomponente(null, "FEFO-TARDIA-" + requisicao.getId(), "O-", "Hemácias",
 				250, coleta, coleta.plusDays(20), "DISPONIVEL", null));
@@ -379,11 +487,105 @@ class TuguyApplicationTests {
 	}
 
 	@Test
+	void planejamentoApresentaRotaEntreHospitaisComLimitesDoComponente() throws Exception {
+		requisicao requisicao = salvarRequisicaoComDestino("Rota Recife", "REC0001");
+		criarBolsaAlocada(requisicao, "ROTA-RECIFE-" + requisicao.getId(),
+				"OLI0001", "Hemácias", LocalDate.now().plusDays(30));
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("rota"))
+				.andExpect(content().string(containsString("ROTA_ENCONTRADA")))
+				.andExpect(content().string(containsString("Hospital Recife")))
+				.andExpect(content().string(containsString("Hospital Olinda")))
+				.andExpect(content().string(containsString("18.0 km")))
+				.andExpect(content().string(containsString("refrigerado")));
+	}
+
+	@Test
+	void planejamentoInformaQuandoDuracaoExcedeToleranciaDoComponente() throws Exception {
+		requisicao requisicao = salvarRequisicaoComDestino("Transporte fora do limite", "REC0001");
+		criarBolsaAlocada(requisicao, "ROTA-PRAZO-" + requisicao.getId(),
+				"PET0001", "Hemácias", LocalDate.now().plusDays(30));
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId())
+						.param("modalidade", "NAO_REFRIGERADO"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("TEMPO_TRANSPORTE_EXCEDIDO")))
+				.andExpect(content().string(containsString("supera o tempo sintético permitido")))
+				.andExpect(content().string(containsString("Hospital Caruaru")))
+				.andExpect(content().string(containsString("não refrigerado")));
+	}
+
+	@Test
+	void planejamentoInformaQuandoNaoExisteTrechoEntreHospitaisCadastrados() throws Exception {
+		hospital destinoSemTrecho = hospitalService.cadastrar(
+				new hospital(null, "Hospital sem trecho", "Recife"));
+		requisicao requisicao = salvarRequisicaoComDestino(
+				"Rota não cadastrada", destinoSemTrecho.getCodigo());
+		criarBolsaAlocada(requisicao, "ROTA-SEM-TRECHO-" + requisicao.getId(),
+				"OLI0001", "Hemácias", LocalDate.now().plusDays(30));
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId()))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("SEM_ROTA")))
+				.andExpect(content().string(containsString("Não foi encontrada rota cadastrada entre os hospitais")));
+	}
+
+	@Test
+	void planejamentoExigeBolsaAlocada() throws Exception {
+		requisicao requisicao = salvarRequisicaoComDestino("Rota sem bolsa", "REC0001");
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId()))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("SEM_BOLSA")))
+				.andExpect(content().string(containsString("Nenhuma bolsa está alocada")));
+	}
+
+	@Test
+	void planejamentoUsaValidadeDoHemocomponente() throws Exception {
+		requisicao requisicao = salvarRequisicaoComDestino("Bolsa vencida", "REC0001");
+		criarBolsaAlocada(requisicao, "ROTA-VENCIDA-" + requisicao.getId(),
+				"OLI0001", "Hemácias", LocalDate.now().minusDays(1));
+
+		mockMvc.perform(get("/requisicoes/{id}/rota", requisicao.getId()))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("HEMOCOMPONENTE_VENCIDO")))
+				.andExpect(content().string(containsString("já está vencido")));
+	}
+
+	private requisicao salvarRequisicaoComDestino(String titulo, String destino) {
+		requisicao requisicao = requisicaoDeTeste(
+				titulo, "Requisição para teste de planejamento de rota", "Alta", "O+");
+		requisicao.setHospitalDestino(destino);
+		return requisicaoService.salvar(requisicao);
+	}
+
+	private requisicao requisicaoDeTeste(String titulo, String descricao, String prioridade, String tipoSanguineo) {
+		requisicao requisicao = new requisicao(null, titulo, descricao, prioridade, tipoSanguineo);
+		requisicao.setHospitalDestino("REC0001");
+		return requisicao;
+	}
+
+	private void criarBolsaAlocada(requisicao requisicao, String codigo, String origem,
+								   String componente, LocalDate validade) {
+		bolsahemocomponente bolsa = new bolsahemocomponente(
+				null, codigo, "O+", componente, 250, LocalDate.now(),
+				validade, "ALOCADA", requisicao);
+		bolsa.setHospitalEstoque(hospitalService.buscarPorCodigo(origem));
+		bolsaService.criar(bolsa);
+	}
+
+	private String hospitalId(String codigo) {
+		return hospitalService.buscarPorCodigo(codigo).getId().toString();
+	}
+
+	@Test
 	void alocarVinculaBolsaEImpedeQueOutraRequisicaoAloqueNovamente() throws Exception {
 		requisicao primeira = requisicaoService.salvar(
-				new requisicao(null, "Requisição alocadora", "Receberá a bolsa compatível", "Alta", "A+"));
+				requisicaoDeTeste("Requisição alocadora", "Receberá a bolsa compatível", "Alta", "A+"));
 		requisicao segunda = requisicaoService.salvar(
-				new requisicao(null, "Outra requisição", "Não deve receber a bolsa já alocada", "Media", "A+"));
+				requisicaoDeTeste("Outra requisição", "Não deve receber a bolsa já alocada", "Media", "A+"));
 		bolsahemocomponente bolsa = bolsaService.criar(new bolsahemocomponente(
 				null, "BOLSA-ALOCAVEL-" + primeira.getId(), "O+", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(10), "DISPONIVEL", null));
@@ -415,11 +617,11 @@ class TuguyApplicationTests {
 	@Test
 	void menuOrdenaRequisicoesDaMaiorParaMenorPrioridade() throws Exception {
 		requisicao baixa = requisicaoService.salvar(
-				new requisicao(null, "Prioridade baixa no menu", "Solicitação de baixa prioridade", "Baixa", "A+"));
+				requisicaoDeTeste("Prioridade baixa no menu", "Solicitação de baixa prioridade", "Baixa", "A+"));
 		requisicao media = requisicaoService.salvar(
-				new requisicao(null, "Prioridade média no menu", "Solicitação de média prioridade", "Média", "A+"));
+				requisicaoDeTeste("Prioridade média no menu", "Solicitação de média prioridade", "Média", "A+"));
 		requisicao alta = requisicaoService.salvar(
-				new requisicao(null, "Prioridade alta no menu", "Solicitação de alta prioridade", "Alta", "A+"));
+				requisicaoDeTeste("Prioridade alta no menu", "Solicitação de alta prioridade", "Alta", "A+"));
 
 		String conteudo = mockMvc.perform(get("/menu"))
 				.andExpect(status().isOk())
@@ -437,7 +639,7 @@ class TuguyApplicationTests {
 	@Test
 	void alocarOutraBolsaDesalocaAnteriorDaMesmaRequisicao() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
-				new requisicao(null, "Requisição troca de bolsa", "Substituir a bolsa alocada", "Alta", "A+"));
+				requisicaoDeTeste("Requisição troca de bolsa", "Substituir a bolsa alocada", "Alta", "A+"));
 		bolsahemocomponente anterior = bolsaService.criar(new bolsahemocomponente(
 				null, "BOLSA-ANTERIOR-" + requisicao.getId(), "O+", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(20), "ALOCADA", requisicao));
@@ -460,9 +662,9 @@ class TuguyApplicationTests {
 	@Test
 	void menuMostraEstadoECodigoDaBolsaAlocadaPorRequisicao() throws Exception {
 		requisicao alocada = requisicaoService.salvar(
-				new requisicao(null, "Requisição já alocada", "Tem uma bolsa vinculada", "Alta", "O+"));
+				requisicaoDeTeste("Requisição já alocada", "Tem uma bolsa vinculada", "Alta", "O+"));
 		requisicao semAlocacao = requisicaoService.salvar(
-				new requisicao(null, "Requisição sem alocação", "Ainda sem bolsa", "Baixa", "A+"));
+				requisicaoDeTeste("Requisição sem alocação", "Ainda sem bolsa", "Baixa", "A+"));
 		bolsaService.criar(new bolsahemocomponente(
 				null, "CODIGO-ALOCADO-" + alocada.getId(), "O+", "Hemácias", 250,
 				LocalDate.now(), LocalDate.now().plusDays(10), "ALOCADA", alocada));
@@ -484,7 +686,9 @@ class TuguyApplicationTests {
 		String linhaSemAlocacao = conteudo.substring(indiceSemAlocacao, conteudo.indexOf("</tr>", indiceSemAlocacao));
 		org.junit.jupiter.api.Assertions.assertTrue(linhaAlocada.contains("Alocada"));
 		org.junit.jupiter.api.Assertions.assertTrue(linhaAlocada.contains("CODIGO-ALOCADO-" + alocada.getId()));
+		org.junit.jupiter.api.Assertions.assertTrue(linhaAlocada.contains("Planejar rota"));
 		org.junit.jupiter.api.Assertions.assertTrue(linhaSemAlocacao.contains("Não alocada"));
 		org.junit.jupiter.api.Assertions.assertTrue(linhaSemAlocacao.contains("Nenhuma"));
+		org.junit.jupiter.api.Assertions.assertFalse(linhaSemAlocacao.contains("Planejar rota"));
 	}
 }

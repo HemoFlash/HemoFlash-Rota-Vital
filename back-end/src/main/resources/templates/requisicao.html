@@ -14,7 +14,8 @@
     tailwind.config = { theme: { extend: { colors: { hemo: { moss: '#526858', mossHover: '#425447', activeBg: '#EEF2EF', bg: '#F7F8F7', coral: '#D97768', coralHover: '#c56354', textMain: '#2D3748', textSub: '#64748B', border: '#E2E8F0' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
   </script>
 </head>
-<body class="bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+<body class="rv-app bg-hemo-bg text-hemo-textMain" style="font-family:'Inter',sans-serif;">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <main class="min-h-screen p-6 md:p-8">
     <div class="mx-auto max-w-3xl rounded-2xl border border-hemo-border bg-white p-6 shadow-sm md:p-8">
       <div class="mb-6 flex items-center justify-between gap-4">
@@ -67,6 +68,15 @@
             <option value="AB+">AB+</option>
           </select>
           <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
+        </div>
+
+        <div>
+          <label for="hospitalDestino" class="mb-2 block text-sm font-semibold text-hemo-textMain">Hospital de destino</label>
+          <select id="hospitalDestino" th:field="*{hospitalDestino}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain focus:border-hemo-moss focus:outline-none focus:ring-2 focus:ring-hemo-moss/20">
+            <option value="">Selecione um hospital</option>
+            <option th:each="hospital : ${hospitais}" th:value="${hospital.codigo}" th:text="|${hospital.nome} — ${hospital.municipio}|">Hospital Recife</option>
+          </select>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('hospitalDestino')}" th:errors="*{hospitalDestino}"></small>
         </div>
 
         <div class="flex flex-wrap gap-3 pt-2">

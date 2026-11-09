@@ -39,6 +39,21 @@
 |---|---|---|---|---|
 | RN12 | Toda Bolsa criada deve referenciar uma Doação de origem; `dataColeta` da Bolsa herda da Doação | `gerarBolsa()` | `DoacaoNaoEncontradaException` | inferida — sem HU explícita, confirmar com o squad antes de implementar |
 
+## DistribuicaoService
+
+| ID | Regra | Onde aplicar | Erro sugerido | Origem |
+|---|---|---|---|---|
+| RN13 | Cada bolsa deve informar o hospital onde está estocada; o destino vem do hospital da requisição | cadastro da bolsa / planejamento da rota | `HospitalDeEstoqueAusenteException` | HU05 |
+| RN14 | A rota é calculada entre hospitais cadastrados usando os trechos da matriz sintética; não existe origem fixa em hemocentro | `PlanejamentoRotaService.buscarCaminho()` | `RotaNaoEncontradaException` | HU05 C1, C4 |
+| RN15 | A duração estimada deve respeitar o limite demonstrativo do componente e modalidade, e a chegada não pode ultrapassar o fim do dia indicado em `dataValidade` | `PlanejamentoRotaService.planejar()` | `TransporteInviavelException` / `HemocomponenteVencidoException` | HU05 C2, C3 |
+
+## HospitalService / MonitoramentoTemperaturaService
+
+| ID | Regra | Onde aplicar | Erro sugerido | Origem |
+|---|---|---|---|---|
+| RN16 | O código do hospital é gerado pelo sistema usando as três primeiras letras do município e uma sequência de quatro dígitos, sem campo editável no cadastro | `hospitalservice.cadastrar()` | Mensagem de validação se não for possível formar o prefixo ou se a sequência acabar | Cadastro de hospitais |
+| RN17 | A leitura periódica de temperatura pertence ao veículo registrado em transporte; veículos com transporte concluído não recebem novas leituras nem aparecem entre os ativos | `monitoramentotemperaturaservice.atualizarLeituras()` / `concluirTransporte()` | Veículo não encontrado ao concluir transporte | HU06 |
+
 ## Observações de implementação
 
 - Regras de validação de campo (RN01, RN03, RN10) devem ser aplicadas na camada de serviço, **não só no banco** — é item explícito do checklist da rubrica ("regras de validade aplicadas nas operações, não apenas no banco").

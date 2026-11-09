@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Endpoint REST real (não script solto) para a operação de ordenação de
+ * Endpoint REST para a operação de ordenação de
  * requisições por prioridade, nas versões sequencial, com threads e com
- * virtual threads (Java 21, bônus).
+ * virtual threads (Java 21).
  *
  * Exemplos de uso (com a aplicação rodando em localhost:8080):
  *

@@ -38,10 +38,7 @@ public class bolsahemocomponenteccontroller {
             requisicao requisicaoExistente = requisicaoService.buscarPorId(bolsa.getRequisicao().getId());
             bolsa.setRequisicao(requisicaoExistente);
 
-            if (bolsa.getStatus() == null || bolsa.getStatus().isBlank()) {
-                bolsa.setStatus("DISPONIVEL");
-            }
-
+            bolsa.setCodigo(null);
             return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(bolsa));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
