@@ -18,7 +18,6 @@ public class user {
     @Email(message = "E-mail inválido")
     private String email;
 
-    @Column(unique = true)
     @NotNull(message = "senha é obrigatória")
     @Pattern(regexp = "\\d{7,20}", message = "A senha deve ter entre 7 e 20 dígitos")
     private String senha;

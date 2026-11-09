@@ -16,6 +16,9 @@ public class userservice {
     }
 
     public user salvar(user user) {
+        if (Repository.existsByEmailIgnoreCase(user.getEmail())) {
+            throw new IllegalArgumentException("Este e-mail já está cadastrado.");
+        }
         return Repository.save(user);
     }
 

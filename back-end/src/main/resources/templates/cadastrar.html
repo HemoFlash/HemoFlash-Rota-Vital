@@ -55,24 +55,28 @@
       <div class="w-full max-w-sm">
         <h2 class="text-2xl font-bold text-hemo-textMain">Criar conta</h2>
         <p class="text-sm text-hemo-textSub mt-1 mb-8">Cadastre-se para acessar o HemoFlash</p>
+        <p th:if="${erroCadastro}" th:text="${erroCadastro}" class="mb-4 text-sm font-medium text-red-600"></p>
 
-        <form th:action="@{/salvar}" method="post" class="space-y-5">
+        <form th:action="@{/salvar}" th:object="${user}" method="post" class="space-y-5">
+          <ul th:if="${#fields.hasErrors('*')}" class="mb-4 text-sm text-red-600">
+            <li th:each="erro : ${#fields.errors('*')}" th:text="${erro}"></li>
+          </ul>
           <div>
             <label for="nome" class="block text-sm font-semibold text-hemo-textMain mb-2">Nome</label>
-            <input id="nome" name="nome" type="text" placeholder="Seu nome completo" required
+            <input id="nome" name="nome" type="text" placeholder="Seu nome completo" required th:value="${user?.nome}"
               class="w-full px-4 py-2.5 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
           </div>
 
           <div>
             <label for="email" class="block text-sm font-semibold text-hemo-textMain mb-2">E-mail</label>
-            <input id="email" name="email" type="email" placeholder="Digite seu e-mail" required
+            <input id="email" name="email" type="email" placeholder="Digite seu e-mail" required th:value="${user?.email}"
               class="w-full px-4 py-2.5 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
           </div>
 
           <div>
             <label for="senha" class="block text-sm font-semibold text-hemo-textMain mb-2">Senha</label>
             <div class="relative">
-              <input id="senha" name="senha" type="password" placeholder="Crie uma senha forte" required minlength="8"
+              <input id="senha" name="senha" type="password" placeholder="Crie uma senha forte" required minlength="7"
                 class="w-full px-4 py-2.5 pr-10 rounded-lg border border-hemo-border text-hemo-textMain text-sm focus:outline-none focus:ring-2 focus:ring-hemo-moss focus:border-transparent">
               <button type="button" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-hemo-textSub">
@@ -111,4 +115,3 @@
   </div>
 </body>
 </html>
-
