@@ -180,14 +180,25 @@ O sistema calcula a rota entre o hospital de estoque da bolsa e o destino da req
 ![Issues do projeto no GitHub](./docs/prints/issues-entrega-03.png)
 [Acessar Issues no GitHub](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/issues)
 
-#### Entrega 04 — 09/11 ☐
-- [ ] Histórias restantes implementadas (mínimo 2, descrição formato POST-IT abaixo)
-- [ ] Commits frequentes (mínimo semanais)
-- [ ] Screencast do uso do sistema (ênfase nas novas histórias) — link:
-- [ ] Screencast da explicação do código — link:
-- [ ] Issue/bug tracker atualizado (print anexado)
+#### Entrega 04 — 09/11 ✅
+- [x] Histórias restantes implementadas (mínimo 2, descrição formato POST-IT abaixo)
+- [x] Commits frequentes (mínimo semanais)
+- [x] Screencast do uso do sistema (ênfase nas novas histórias) — [Acessar screencast](https://youtu.be/t9CTpYtR_tg)
+- [x] Screencast da explicação do código — [Acessar screencast](https://youtu.be/t9CTpYtR_tg)
+- [x] Issue/bug tracker atualizado (print anexado)
+
+![Issues do projeto no GitHub](./docs/prints/issues-entrega-04.png)
+[Acessar Issues no GitHub](https://github.com/Vitoria-Gabrielly-DEV/Tuguy-Rota-Vital/issues)
 
 **Histórias implementadas nesta entrega:**
+> **HU05 — Alocar hemocomponentes priorizando a validade**
+> Como responsável pela distribuição, eu gostaria de calcular a rota de menor tempo entre o hemocentro e o hospital da requisição, considerando o prazo de entrega e a cadeia fria, para que eu despache as bolsas sabendo que elas chegam dentro do prazo e sem exceder o tempo de transporte permitido.
+
+> **HU06 — Consultar compatibilidade ABO/Rh**
+> Como responsável pelo monitoramento, eu gostaria de acompanhar em um painel a temperatura de cada transporte de hemocomponentes, para que eu identifique em minutos uma carga fora da faixa e proteja a cadeia fria.
+
+> **HU07 — Acompanhar indicadores da rede**
+>  Como gestor da rede de sangue, eu gostaria de visualizar indicadores de estoque e de demanda por hemocomponente, para que eu perceba cedo a falta de algum tipo sanguíneo e decida onde agir antes que uma requisição deixe de ser atendida.
 
 #### Apresentação Final — 09/11 a 13/11 ☐
 - [ ] Vídeo/apresentação de até 8 min cobrindo: problema, solução, fluxo de trabalho, ferramentas, lições aprendidas, demonstração do produto — link:
