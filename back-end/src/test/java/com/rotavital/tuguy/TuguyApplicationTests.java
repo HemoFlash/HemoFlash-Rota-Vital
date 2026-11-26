@@ -344,6 +344,7 @@ class TuguyApplicationTests {
 						.param("descricao", "Teste de cadastro do tipo sanguíneo")
 						.param("prioridade", "Alta")
 						.param("tipoSanguineo", "B-")
+						.param("componente", "HEMACIAS")
 						.param("hospitalDestino", "REC0001"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
@@ -382,6 +383,7 @@ class TuguyApplicationTests {
 						.param("descricao", "Descrição modificada")
 						.param("prioridade", "Alta")
 						.param("tipoSanguineo", "AB+")
+						.param("componente", "HEMACIAS")
 						.param("hospitalDestino", "OLI0001"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/menu"));
@@ -473,6 +475,105 @@ class TuguyApplicationTests {
 	}
 
 	@Test
+	void consultaRealDoHashFiltraComponenteCompatibilidadeEFefoEAtualizaIndiceAposAlocacao()
+			throws Exception {
+		requisicao pedido = requisicaoDeTeste(
+				"Requisição integração hash", "Validação ponta a ponta do índice", "Alta", "A+");
+		pedido.setComponente("HEMACIAS");
+		pedido = requisicaoService.salvar(pedido);
+
+		LocalDate hoje = LocalDate.now();
+		bolsahemocomponente fefo = bolsaService.criar(new bolsahemocomponente(
+				null, "HASH-FEFO-" + pedido.getId(), "O-", "Hemácias", 250,
+				hoje, hoje.plusDays(3), "DISPONIVEL", null));
+		bolsahemocomponente seguinte = bolsaService.criar(new bolsahemocomponente(
+				null, "HASH-SEGUINTE-" + pedido.getId(), "A+", "HEMACIAS", 250,
+				hoje, hoje.plusDays(8), "DISPONIVEL", null));
+		bolsaService.criar(new bolsahemocomponente(
+				null, "HASH-OUTRO-COMPONENTE-" + pedido.getId(), "O-", "Plasma", 250,
+				hoje, hoje.plusDays(1), "DISPONIVEL", null));
+		bolsaService.criar(new bolsahemocomponente(
+				null, "HASH-INCOMPATIVEL-" + pedido.getId(), "B+", "Hemácias", 250,
+				hoje, hoje.plusDays(1), "DISPONIVEL", null));
+
+		String listaAntesDaAlocacao = mockMvc.perform(
+						get("/requisicoes/{id}/alocar-bolsa", pedido.getId()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("bolsas"))
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+
+		org.junit.jupiter.api.Assertions.assertTrue(
+				listaAntesDaAlocacao.contains(fefo.getCodigo()));
+		org.junit.jupiter.api.Assertions.assertTrue(
+				listaAntesDaAlocacao.contains(seguinte.getCodigo()));
+		org.junit.jupiter.api.Assertions.assertFalse(
+				listaAntesDaAlocacao.contains("HASH-OUTRO-COMPONENTE-" + pedido.getId()));
+		org.junit.jupiter.api.Assertions.assertFalse(
+				listaAntesDaAlocacao.contains("HASH-INCOMPATIVEL-" + pedido.getId()));
+		org.junit.jupiter.api.Assertions.assertTrue(
+				listaAntesDaAlocacao.indexOf(fefo.getCodigo())
+						< listaAntesDaAlocacao.indexOf(seguinte.getCodigo()));
+
+		mockMvc.perform(post("/requisicoes/{requisicaoId}/alocar-bolsa/{bolsaId}",
+						pedido.getId(), fefo.getId()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/requisicoes/" + pedido.getId() + "/alocar-bolsa"))
+				.andExpect(flash().attribute("sucessoAlocacao",
+						"Bolsa alocada para a requisição com sucesso."));
+
+		org.junit.jupiter.api.Assertions.assertEquals("ALOCADA",
+				bolsaService.buscarPorId(fefo.getId()).orElseThrow().getStatus());
+
+		String listaAposAlocacao = mockMvc.perform(
+						get("/requisicoes/{id}/alocar-bolsa", pedido.getId()))
+				.andExpect(status().isOk())
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+		org.junit.jupiter.api.Assertions.assertFalse(listaAposAlocacao.contains(fefo.getCodigo()));
+		org.junit.jupiter.api.Assertions.assertTrue(listaAposAlocacao.contains(seguinte.getCodigo()));
+	}
+
+	@Test
+	void formularioDeRequisicaoExigeComponenteCanonico() throws Exception {
+		mockMvc.perform(get("/requisicoes"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("requisicao"))
+				.andExpect(content().string(containsString("<select id=\"componente\" required")))
+				.andExpect(content().string(containsString("name=\"componente\"")))
+				.andExpect(content().string(containsString("value=\"HEMACIAS\"")))
+				.andExpect(content().string(containsString("value=\"PLASMA\"")))
+				.andExpect(content().string(containsString("value=\"PLAQUETAS\"")));
+	}
+
+	@Test
+	void servidorRejeitaRequisicaoSemComponente() throws Exception {
+		mockMvc.perform(post("/requisicoes")
+						.param("titulo", "Requisição sem componente")
+						.param("descricao", "Deve ser rejeitada no servidor")
+						.param("prioridade", "Alta")
+						.param("tipoSanguineo", "A+")
+						.param("hospitalDestino", "REC0001"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("requisicao"))
+				.andExpect(content().string(containsString("Componente é obrigatório")));
+
+		requisicao existente = requisicaoService.salvar(
+				requisicaoDeTeste("Requisição com componente", "Teste de edição sem componente", "Alta", "A+"));
+		mockMvc.perform(post("/requisicoes/{id}", existente.getId())
+						.param("titulo", "Requisição editada sem componente")
+						.param("descricao", "Deve permanecer inválida")
+						.param("prioridade", "Alta")
+						.param("tipoSanguineo", "A+")
+						.param("hospitalDestino", "REC0001"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("requisicao"))
+				.andExpect(content().string(containsString("Componente é obrigatório")));
+	}
+
+	@Test
 	void bolsasCompativeisNaAlocacaoSaoOrdenadasPorValidadeCrescente() throws Exception {
 		requisicao requisicao = requisicaoService.salvar(
 				requisicaoDeTeste("Requisição ordenação FEFO", "Teste de validade FEFO", "Alta", "O-"));
@@ -506,6 +607,8 @@ class TuguyApplicationTests {
 				.andExpect(content().string(containsString(
 						"Real Hospital Português de Beneficência em Pernambuco")))
 				.andExpect(content().string(containsString("Hospital Olinda")))
+				.andExpect(content().string(containsString("Vizinho mais próximo (comparação)")))
+				.andExpect(content().string(containsString("Dijkstra (rota escolhida)")))
 				.andExpect(content().string(containsString("18.0 km")))
 				.andExpect(content().string(containsString("refrigerado")));
 	}
@@ -592,6 +695,7 @@ class TuguyApplicationTests {
 
 	private requisicao requisicaoDeTeste(String titulo, String descricao, String prioridade, String tipoSanguineo) {
 		requisicao requisicao = new requisicao(null, titulo, descricao, prioridade, tipoSanguineo);
+		requisicao.setComponente("HEMACIAS");
 		requisicao.setHospitalDestino("REC0001");
 		return requisicao;
 	}
@@ -675,17 +779,19 @@ class TuguyApplicationTests {
 
 	@Test
 	void alocarOutraBolsaDesalocaAnteriorDaMesmaRequisicao() throws Exception {
-		requisicao requisicao = requisicaoService.salvar(
-				requisicaoDeTeste("Requisição troca de bolsa", "Substituir a bolsa alocada", "Alta", "A+"));
+		requisicao pedido = requisicaoDeTeste(
+				"Requisição troca de bolsa", "Substituir a bolsa alocada", "Alta", "A+");
+		pedido.setComponente("PLAQUETAS");
+		pedido = requisicaoService.salvar(pedido);
 		bolsahemocomponente anterior = bolsaService.criar(new bolsahemocomponente(
-				null, "BOLSA-ANTERIOR-" + requisicao.getId(), "O+", "Hemácias", 250,
-				LocalDate.now(), LocalDate.now().plusDays(20), "ALOCADA", requisicao));
+				null, "BOLSA-ANTERIOR-" + pedido.getId(), "O+", "Plaquetas", 250,
+				LocalDate.now(), LocalDate.now().plusDays(20), "ALOCADA", pedido));
 		bolsahemocomponente nova = bolsaService.criar(new bolsahemocomponente(
-				null, "BOLSA-NOVA-" + requisicao.getId(), "A+", "Hemácias", 250,
+				null, "BOLSA-NOVA-" + pedido.getId(), "A+", "PLAQUETAS", 250,
 				LocalDate.now(), LocalDate.now().plusDays(10), "DISPONIVEL", null));
 
 		mockMvc.perform(post("/requisicoes/{requisicaoId}/alocar-bolsa/{bolsaId}",
-						requisicao.getId(), nova.getId()))
+						pedido.getId(), nova.getId()))
 				.andExpect(status().is3xxRedirection());
 
 		bolsahemocomponente anteriorAtualizada = bolsaService.buscarPorId(anterior.getId()).orElseThrow();
@@ -693,7 +799,7 @@ class TuguyApplicationTests {
 		org.junit.jupiter.api.Assertions.assertEquals("DISPONIVEL", anteriorAtualizada.getStatus());
 		org.junit.jupiter.api.Assertions.assertNull(anteriorAtualizada.getRequisicao());
 		org.junit.jupiter.api.Assertions.assertEquals("ALOCADA", novaAtualizada.getStatus());
-		org.junit.jupiter.api.Assertions.assertEquals(requisicao.getId(), novaAtualizada.getRequisicao().getId());
+		org.junit.jupiter.api.Assertions.assertEquals(pedido.getId(), novaAtualizada.getRequisicao().getId());
 	}
 
 	@Test

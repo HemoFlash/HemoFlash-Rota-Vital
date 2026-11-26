@@ -18,7 +18,7 @@
   <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <main class="min-h-screen p-6 md:p-8">
     <div class="mx-auto max-w-3xl rounded-2xl border border-hemo-border bg-white p-6 shadow-sm md:p-8">
-      <div class="mb-6 flex items-center justify-between gap-4">
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-[0.2em] text-hemo-textSub">Requisição</p>
           <h1 class="mt-2 text-3xl font-bold text-hemo-textMain" th:text="${requisicao.id == null ? 'Nova requisição' : 'Editar requisição'}">Nova requisição</h1>
@@ -68,6 +68,17 @@
             <option value="AB+">AB+</option>
           </select>
           <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('tipoSanguineo')}" th:errors="*{tipoSanguineo}"></small>
+        </div>
+
+        <div>
+          <label for="componente" class="mb-2 block text-sm font-semibold text-hemo-textMain">Hemocomponente</label>
+          <select id="componente" th:field="*{componente}" required class="w-full rounded-xl border border-hemo-border bg-white px-4 py-3 text-sm text-hemo-textMain">
+            <option value="">Selecione um hemocomponente</option>
+            <option value="HEMACIAS">Hemácias</option>
+            <option value="PLASMA">Plasma</option>
+            <option value="PLAQUETAS">Plaquetas</option>
+          </select>
+          <small class="mt-1 block text-sm text-rose-600" th:if="${#fields.hasErrors('componente')}" th:errors="*{componente}"></small>
         </div>
 
         <div>

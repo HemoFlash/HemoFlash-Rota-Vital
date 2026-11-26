@@ -51,7 +51,8 @@ public class requisicaocontroller {
     public String listarBolsasParaAlocacao(@PathVariable("requisicaoId") Long requisicaoId, Model model) {
         requisicao requisicao = Service.buscarPorId(requisicaoId);
         model.addAttribute("requisicao", requisicao);
-        model.addAttribute("bolsas", BolsaService.testeABO(requisicao.getTipoSanguineo()));
+        model.addAttribute("bolsas",
+                BolsaService.consultarPorHashCompatibilidadeFefo(requisicao));
         model.addAttribute("podePlanejarRota", BolsaService.temBolsaAlocada(requisicaoId));
         if (requisicao.getHospitalDestino() != null) {
             model.addAttribute("hospitalDestino", HospitalService.buscarPorCodigo(requisicao.getHospitalDestino()));
@@ -151,6 +152,9 @@ public class requisicaocontroller {
 
     @PostMapping("/requisicoes")
     public String salvar(@Valid requisicao requisicao, BindingResult result) {
+        if (requisicao.getComponente() == null || requisicao.getComponente().isBlank()) {
+            result.rejectValue("componente", "componente.obrigatorio", "Componente é obrigatório");
+        }
         if (!HospitalService.existePorCodigo(requisicao.getHospitalDestino())) {
             result.rejectValue("hospitalDestino", "hospitalDestino.invalido",
                     "Selecione um hospital cadastrado.");
@@ -167,6 +171,9 @@ public class requisicaocontroller {
     public String atualizarRequisicao(@PathVariable Long id, @Valid requisicao requisicao,
                                       BindingResult result) {
         requisicao.setId(id);
+        if (requisicao.getComponente() == null || requisicao.getComponente().isBlank()) {
+            result.rejectValue("componente", "componente.obrigatorio", "Componente é obrigatório");
+        }
         if (!HospitalService.existePorCodigo(requisicao.getHospitalDestino())) {
             result.rejectValue("hospitalDestino", "hospitalDestino.invalido",
                     "Selecione um hospital cadastrado.");

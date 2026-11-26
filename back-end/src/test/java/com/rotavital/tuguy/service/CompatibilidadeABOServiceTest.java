@@ -47,4 +47,11 @@ class CompatibilidadeABOServiceTest {
     void testeABONormalizaEspacosEMinusculas() {
         assertTrue(service.testeABO(" aB+ ", " o- "));
     }
+
+    @Test
+    void tiposDoadoresCompativeisRetornaTodosOsTiposPermitidosPelaMatriz() {
+        assertEquals(Set.of("O-", "O+", "A-", "A+"),
+                Set.copyOf(service.tiposDoadoresCompativeis("A+")));
+        assertTrue(service.tiposDoadoresCompativeis("tipo inválido").isEmpty());
+    }
 }

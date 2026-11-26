@@ -13,6 +13,8 @@ public class PlanejamentoRota {
     private final String modalidadeTransporte;
     private final List<String> caminho;
     private final double distanciaKm;
+    private final List<String> caminhoVizinhoMaisProximo;
+    private final double distanciaVizinhoMaisProximoKm;
     private final Duration duracao;
     private final Duration tempoMaximoTransporte;
     private final LocalDateTime chegadaEstimada;
@@ -22,6 +24,15 @@ public class PlanejamentoRota {
                             String modalidadeTransporte, List<String> caminho, double distanciaKm,
                             Duration duracao, Duration tempoMaximoTransporte,
                             LocalDateTime chegadaEstimada, LocalDateTime limiteValidade) {
+        this(status, mensagem, hospitalOrigem, hospitalDestino, modalidadeTransporte, caminho, distanciaKm,
+                List.of(), 0.0, duracao, tempoMaximoTransporte, chegadaEstimada, limiteValidade);
+    }
+
+    public PlanejamentoRota(String status, String mensagem, String hospitalOrigem, String hospitalDestino,
+                            String modalidadeTransporte, List<String> caminho, double distanciaKm,
+                            List<String> caminhoVizinhoMaisProximo, double distanciaVizinhoMaisProximoKm,
+                            Duration duracao, Duration tempoMaximoTransporte,
+                            LocalDateTime chegadaEstimada, LocalDateTime limiteValidade) {
         this.status = status;
         this.mensagem = mensagem;
         this.hospitalOrigem = hospitalOrigem;
@@ -29,6 +40,8 @@ public class PlanejamentoRota {
         this.modalidadeTransporte = modalidadeTransporte;
         this.caminho = List.copyOf(caminho);
         this.distanciaKm = distanciaKm;
+        this.caminhoVizinhoMaisProximo = List.copyOf(caminhoVizinhoMaisProximo);
+        this.distanciaVizinhoMaisProximoKm = distanciaVizinhoMaisProximoKm;
         this.duracao = duracao;
         this.tempoMaximoTransporte = tempoMaximoTransporte;
         this.chegadaEstimada = chegadaEstimada;
@@ -61,6 +74,14 @@ public class PlanejamentoRota {
 
     public double getDistanciaKm() {
         return distanciaKm;
+    }
+
+    public List<String> getCaminhoVizinhoMaisProximo() {
+        return caminhoVizinhoMaisProximo;
+    }
+
+    public double getDistanciaVizinhoMaisProximoKm() {
+        return distanciaVizinhoMaisProximoKm;
     }
 
     public Duration getDuracao() {

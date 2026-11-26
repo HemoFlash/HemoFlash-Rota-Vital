@@ -29,6 +29,8 @@ public class requisicao {
     @NotBlank(message = "Tipo sanguíneo é obrigatório")
     private String tipoSanguineo;
 
+    private String componente;
+
     private String hospitalDestino;
 
     public requisicao() { }
@@ -59,6 +61,9 @@ public class requisicao {
 
     public String getTipoSanguineo() { return tipoSanguineo; }
     public void setTipoSanguineo(String tipoSanguineo) { this.tipoSanguineo = tipoSanguineo; }
+
+    public String getComponente() { return componente; }
+    public void setComponente(String componente) { this.componente = componente; }
 
     public String getHospitalDestino() { return hospitalDestino; }
     public void setHospitalDestino(String hospitalDestino) { this.hospitalDestino = hospitalDestino; }

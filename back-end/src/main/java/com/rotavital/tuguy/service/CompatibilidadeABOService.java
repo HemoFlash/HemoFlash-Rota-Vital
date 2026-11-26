@@ -3,6 +3,8 @@ package com.rotavital.tuguy.service;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CompatibilidadeABOService {
@@ -41,6 +43,22 @@ public class CompatibilidadeABOService {
         }
 
         return MATRIZ_COMPATIBILIDADE[indiceReceptor][indiceDoador];
+    }
+
+    public List<String> tiposDoadoresCompativeis(String tipoRequisicao) {
+        String receptor = normalizar(tipoRequisicao);
+        int indiceReceptor = receptor == null ? -1 : indiceTipoSanguineo(receptor);
+        if (indiceReceptor < 0) {
+            return List.of();
+        }
+
+        List<String> compativeis = new ArrayList<>();
+        for (int indiceDoador = 0; indiceDoador < TIPOS_SANGUINEOS.length; indiceDoador++) {
+            if (MATRIZ_COMPATIBILIDADE[indiceReceptor][indiceDoador]) {
+                compativeis.add(TIPOS_SANGUINEOS[indiceDoador]);
+            }
+        }
+        return List.copyOf(compativeis);
     }
 
     private int indiceTipoSanguineo(String tipo) {

@@ -11,8 +11,6 @@
 
 O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas entre hospitais considerando a modalidade de transporte, os limites demonstrativos de conservação do componente e a validade, e monitora periodicamente a temperatura de cada veículo em transporte.
 
-**Acesse online em:** https://hemoflash-rota-vital.onrender.com/
-
 > ⚠️ O projeto utiliza **exclusivamente dados sintéticos** (sem dados reais de doadores/pacientes — LGPD). A telemetria de temperatura/GPS é simulada e a compatibilidade ABO/Rh possui finalidade **didática**, não substituindo protocolos clínicos. Não há integração com sistemas oficiais da Hemorrede.
 
 ### Ficha do Projeto
@@ -220,15 +218,31 @@ O sistema calcula a rota entre o hospital de estoque da bolsa e o destino da req
 
 - Links dos artefatos:
 
-#### Unidade 2 (fecha semana 15–16) ☐
-- [ ] Implementação da lógica de roteirização (busca de vizinho mais próximo), priorização FEFO (inserção ordenada), índice de estoque por hash e compatibilidade ABO/Rh (matriz de compatibilidade).
-- [ ] Reimplementação de todos esses algoritmos, integrados entre si e com a aplicação de POO — dado um pedido, o sistema deve alocar a bolsa compatível, priorizada por validade, e calcular a rota.
-- [ ] Mesma lógica da U1, cobrindo agora os quatro algoritmos.
-- [ ] Para cada algoritmo, a complexidade declarada e justificada com base na implementação real (não copiada de material genérico).
-- [ ] Compatibilidade ABO/Rh implementada corretamente via matriz, com casos de teste cobrindo compatibilidade e incompatibilidade
-- [ ] Integração completa: rota + validade + compatibilidade + consulta por hash funcionando em conjunto, em Java
-- [ ] Análise de complexidade correta e justificada
-- [ ] Qualidade e coerência da tradução comentada entre C/C++ e Java
+#### Unidade 2 (fecha semana 15–16) 🟡
+- [x] Implementação da lógica de roteirização (busca de vizinho mais próximo), priorização FEFO (inserção ordenada), índice de estoque por hash e compatibilidade ABO/Rh (matriz de compatibilidade).
+- [x] Reimplementação de todos esses algoritmos em C/C++ e Java, com a versão Java integrada ao Spring Boot.
+- [x] Mesma lógica da U1, cobrindo agora os quatro algoritmos da Unidade 2.
+- [x] Para cada algoritmo, a complexidade declarada e justificada com base na implementação real.
+- [x] Compatibilidade ABO/Rh implementada corretamente via matriz, com casos de teste cobrindo compatibilidade e incompatibilidade.
+- [x] Integração: hash + compatibilidade + FEFO na consulta e alocação; rota + validade no planejamento.
+- [x] Análise de complexidade correta e justificada em [`docs/entrega-02-complexidade.md`](./docs/entrega-02-complexidade.md).
+- [x] Qualidade e coerência da tradução comentada entre C/C++ e Java em [`docs/entrega-02-traducao-c-java.md`](./docs/entrega-02-traducao-c-java.md).
+
+- Links dos artefatos:
+  - Hash C: [`EspalhamentoHash.c`](./back-end/src/main/c/EspalhamentoHash.c)
+  - FEFO C: [`fefo_prioridade.c`](./back-end/src/main/c/fefo_prioridade.c)
+  - Compatibilidade C: [`CompatibilidadeABO.c`](./back-end/src/main/c/CompatibilidadeABO.c)
+  - Roteirização C: [`RoteirizacaoVizinhoEDijkstra.c`](./back-end/src/main/c/RoteirizacaoVizinhoEDijkstra.c)
+  - Testes C do hash e das rotas: [`EspalhamentoHashTest.c`](./back-end/src/main/c/EspalhamentoHashTest.c) · [`RoteirizacaoTest.c`](./back-end/src/main/c/RoteirizacaoTest.c)
+  - Hash Java: [`EspalhamentoHash.java`](./back-end/src/main/java/com/rotavital/tuguy/service/EspalhamentoHash.java)
+  - Vizinho mais próximo Java: [`RoteamentoVizinhoMaisProximoService.java`](./back-end/src/main/java/com/rotavital/tuguy/service/RoteamentoVizinhoMaisProximoService.java)
+  - Testes Java de hash/compatibilidade e vizinho mais próximo: [`EspalhamentoHashTest.java`](./back-end/src/test/java/com/rotavital/tuguy/service/EspalhamentoHashTest.java) · [`ConsultaHashCompatibilidadeTest.java`](./back-end/src/test/java/com/rotavital/tuguy/service/ConsultaHashCompatibilidadeTest.java) · [`RoteamentoVizinhoMaisProximoServiceTest.java`](./back-end/src/test/java/com/rotavital/tuguy/service/RoteamentoVizinhoMaisProximoServiceTest.java)
+  - Fluxo integrado: [`entrega-02-integracao.md`](./docs/entrega-02-integracao.md)
+
+> **Pendente para encerrar a auditoria:** confirmar que o grafo C de demonstração
+> com cinco vértices atende ao critério da disciplina. Se for exigida uma rede
+> configurável ou equivalente à rede Java, ampliar o grafo e seus testes antes
+> de marcar a Unidade 2 como concluída.
 
 - Links dos artefatos:
 

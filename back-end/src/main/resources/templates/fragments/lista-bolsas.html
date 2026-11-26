@@ -41,7 +41,7 @@
       </tr>
       <tr th:if="${#lists.isEmpty(bolsas)}">
         <td class="px-4 py-6 text-center text-sm text-hemo-textSub" colspan="9"
-            th:text="${requisicao == null ? 'Nenhuma bolsa cadastrada.' : (#strings.isEmpty(requisicao.tipoSanguineo) ? 'A requisição não possui tipo sanguíneo cadastrado.' : 'Nenhuma bolsa compatível com o tipo sanguíneo da requisição.')}">
+            th:text="${requisicao == null ? 'Nenhuma bolsa cadastrada.' : (#strings.isEmpty(requisicao.componente) ? 'A requisição não possui hemocomponente cadastrado.' : (#strings.isEmpty(requisicao.tipoSanguineo) ? 'A requisição não possui tipo sanguíneo cadastrado.' : 'Nenhuma bolsa compatível com os critérios da requisição.'))}">
           Nenhuma bolsa cadastrada.
         </td>
       </tr>

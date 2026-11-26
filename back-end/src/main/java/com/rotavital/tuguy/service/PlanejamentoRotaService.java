@@ -33,11 +33,14 @@ public class PlanejamentoRotaService {
 
     private final bolsahemocomponenterepository bolsaRepository;
     private final hospitalrepository hospitalRepository;
+    private final RoteamentoVizinhoMaisProximoService vizinhoMaisProximoService;
 
     public PlanejamentoRotaService(bolsahemocomponenterepository bolsaRepository,
-                                   hospitalrepository hospitalRepository) {
+                                   hospitalrepository hospitalRepository,
+                                   RoteamentoVizinhoMaisProximoService vizinhoMaisProximoService) {
         this.bolsaRepository = bolsaRepository;
         this.hospitalRepository = hospitalRepository;
+        this.vizinhoMaisProximoService = vizinhoMaisProximoService;
     }
 
     @Transactional(readOnly = true)
@@ -87,12 +90,17 @@ public class PlanejamentoRotaService {
                     origem.getNome(), destino.getNome(), transporte, List.of(), 0, null, null, null, validade);
         }
 
-        Caminho caminho = buscarCaminho(origem.getCodigo(), destino.getCodigo());
+        Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> grafo = criarGrafo();
+        RoteamentoVizinhoMaisProximoService.Resultado caminhoVizinho =
+                vizinhoMaisProximoService.calcular(origem.getCodigo(), destino.getCodigo(), grafo);
+        Caminho caminho = buscarCaminho(origem.getCodigo(), destino.getCodigo(), grafo);
         if (caminho == null) {
             return resultado("SEM_ROTA",
                     "Não foi encontrada rota cadastrada entre os hospitais com os dados sintéticos disponíveis.",
                     origem.getNome(), destino.getNome(), transporte, List.of(), 0, null, tolerancia, null, validade);
         }
+        List<String> caminhoVizinhoNomes = caminhoVizinho == null
+                ? List.of() : nomesHospitais(caminhoVizinho.caminho());
 
         int velocidade = REFRIGERADO.equals(transporte)
                 ? VELOCIDADE_REFRIGERADO_KMH : VELOCIDADE_NAO_REFRIGERADO_KMH;
@@ -100,31 +108,37 @@ public class PlanejamentoRotaService {
         Duration duracao = Duration.ofMinutes(minutos);
         LocalDateTime chegada = agora.plus(duracao);
         if (duracao.compareTo(tolerancia) > 0) {
-            return resultado("TEMPO_TRANSPORTE_EXCEDIDO",
+            return resultadoComComparacao("TEMPO_TRANSPORTE_EXCEDIDO",
                     "A duração estimada supera o tempo sintético permitido para este componente e transporte.",
                     origem.getNome(), destino.getNome(), transporte, caminho.hospitais(),
-                    caminho.distanciaKm(), duracao, tolerancia, chegada, validade);
+                    caminho.distanciaKm(), caminhoVizinhoNomes,
+                    caminhoVizinho == null ? 0.0 : caminhoVizinho.distanciaKm(),
+                    duracao, tolerancia, chegada, validade);
         }
         if (chegada.isAfter(validade)) {
-            return resultado("VENCIMENTO_NO_TRAJETO",
+            return resultadoComComparacao("VENCIMENTO_NO_TRAJETO",
                     "O hemocomponente venceria antes da chegada ao hospital de destino.",
                     origem.getNome(), destino.getNome(), transporte, caminho.hospitais(),
-                    caminho.distanciaKm(), duracao, tolerancia, chegada, validade);
+                    caminho.distanciaKm(), caminhoVizinhoNomes,
+                    caminhoVizinho == null ? 0.0 : caminhoVizinho.distanciaKm(),
+                    duracao, tolerancia, chegada, validade);
         }
 
-        return resultado("ROTA_ENCONTRADA",
+        return resultadoComComparacao("ROTA_ENCONTRADA",
                 "Rota encontrada. A duração respeita o limite de transporte e a data de validade.",
                 origem.getNome(), destino.getNome(), transporte, caminho.hospitais(),
-                caminho.distanciaKm(), duracao, tolerancia, chegada, validade);
+                caminho.distanciaKm(), caminhoVizinhoNomes,
+                caminhoVizinho == null ? 0.0 : caminhoVizinho.distanciaKm(),
+                duracao, tolerancia, chegada, validade);
     }
 
-    private Caminho buscarCaminho(String origem, String destino) {
+    private Caminho buscarCaminho(String origem, String destino,
+                                  Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> grafo) {
         if (origem.equals(destino)) {
             hospital atual = hospitalRepository.findByCodigoIgnoreCase(origem).orElseThrow();
             return new Caminho(List.of(atual.getNome()), 0);
         }
 
-        Map<String, List<Trecho>> grafo = criarGrafo();
         Map<String, Double> distancias = new HashMap<>();
         Map<String, String> anteriores = new HashMap<>();
         PriorityQueue<No> fila = new PriorityQueue<>(Comparator.comparingDouble(No::distanciaKm));
@@ -139,7 +153,8 @@ public class PlanejamentoRotaService {
             if (atual.codigo().equals(destino)) {
                 break;
             }
-            for (Trecho trecho : grafo.getOrDefault(atual.codigo(), List.of())) {
+            for (RoteamentoVizinhoMaisProximoService.Trecho trecho
+                    : grafo.getOrDefault(atual.codigo(), List.of())) {
                 double total = atual.distanciaKm() + trecho.distanciaKm();
                 if (total < distancias.getOrDefault(trecho.destino(), Double.POSITIVE_INFINITY)) {
                     distancias.put(trecho.destino(), total);
@@ -167,8 +182,8 @@ public class PlanejamentoRotaService {
         return new Caminho(hospitais, distancia);
     }
 
-    private Map<String, List<Trecho>> criarGrafo() {
-        Map<String, List<Trecho>> grafo = new HashMap<>();
+    private Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> criarGrafo() {
+        Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> grafo = new HashMap<>();
         adicionarTrechoEntreHospitais(grafo,
                 "Real Hospital Português de Beneficência em Pernambuco", "Hospital da Restauração (HR)", 1.4);
         adicionarTrechoEntreHospitais(grafo,
@@ -220,7 +235,8 @@ public class PlanejamentoRotaService {
         return grafo;
     }
 
-    private void adicionarTrechoEntreHospitais(Map<String, List<Trecho>> grafo,
+    private void adicionarTrechoEntreHospitais(
+                                                Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> grafo,
                                                 String nomeOrigem, String nomeDestino, double distanciaKm) {
         hospital origem = hospitalRepository.findByNomeIgnoreCase(nomeOrigem).orElse(null);
         hospital destino = hospitalRepository.findByNomeIgnoreCase(nomeDestino).orElse(null);
@@ -229,14 +245,15 @@ public class PlanejamentoRotaService {
         }
     }
 
-    private void adicionarTrechoBidirecional(Map<String, List<Trecho>> grafo,
+    private void adicionarTrechoBidirecional(
+                                             Map<String, List<RoteamentoVizinhoMaisProximoService.Trecho>> grafo,
                                              String origem, String destino, double distanciaKm) {
         if (hospitalRepository.existsByCodigoIgnoreCase(origem)
                 && hospitalRepository.existsByCodigoIgnoreCase(destino)) {
             grafo.computeIfAbsent(origem, chave -> new ArrayList<>())
-                    .add(new Trecho(destino, distanciaKm));
+                    .add(new RoteamentoVizinhoMaisProximoService.Trecho(destino, distanciaKm));
             grafo.computeIfAbsent(destino, chave -> new ArrayList<>())
-                    .add(new Trecho(origem, distanciaKm));
+                    .add(new RoteamentoVizinhoMaisProximoService.Trecho(origem, distanciaKm));
         }
     }
 
@@ -279,7 +296,22 @@ public class PlanejamentoRotaService {
                 duracao, tolerancia, chegada, validade);
     }
 
-    private record Trecho(String destino, double distanciaKm) {
+    private PlanejamentoRota resultadoComComparacao(
+            String status, String mensagem, String origem, String destino, String modalidade,
+            List<String> caminhoDijkstra, double distanciaDijkstra,
+            List<String> caminhoVizinho, double distanciaVizinho,
+            Duration duracao, Duration tolerancia, LocalDateTime chegada, LocalDateTime validade) {
+        return new PlanejamentoRota(status, mensagem, origem, destino, modalidade,
+                caminhoDijkstra, distanciaDijkstra, caminhoVizinho, distanciaVizinho,
+                duracao, tolerancia, chegada, validade);
+    }
+
+    private List<String> nomesHospitais(List<String> codigos) {
+        return codigos.stream()
+                .map(codigo -> hospitalRepository.findByCodigoIgnoreCase(codigo)
+                        .map(hospital::getNome)
+                        .orElse(codigo))
+                .toList();
     }
 
     private record No(String codigo, double distanciaKm) {

@@ -5,6 +5,8 @@ import com.rotavital.tuguy.model.requisicao;
 import com.rotavital.tuguy.repository.bolsahemocomponenterepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,13 +19,22 @@ public class bolsahemocomponenteservice {
     private final bolsahemocomponenterepository repository;
     private final CompatibilidadeABOService compatibilidadeABOService;
     private final bolsahemocomponentefefoservice fefoService;
+    private final EspalhamentoHash indiceHash;
 
+    @Autowired
     public bolsahemocomponenteservice(bolsahemocomponenterepository repository,
                                       CompatibilidadeABOService compatibilidadeABOService,
-                                      bolsahemocomponentefefoservice fefoService) {
+                                      bolsahemocomponentefefoservice fefoService,
+                                      EspalhamentoHash indiceHash) {
         this.repository = repository;
         this.compatibilidadeABOService = compatibilidadeABOService;
         this.fefoService = fefoService;
+        this.indiceHash = indiceHash;
+    }
+
+    @PostConstruct
+    public void reconstruirIndiceHash() {
+        indiceHash.reconstruir(repository.findAll());
     }
 
     public bolsahemocomponente criar(bolsahemocomponente bolsa) {
@@ -43,8 +54,9 @@ public class bolsahemocomponenteservice {
         bolsahemocomponente salva = repository.save(bolsa);
         if (salva.getCodigo() == null || salva.getCodigo().isBlank()) {
             salva.setCodigo("BOLSA-" + salva.getId());
-            return repository.save(salva);
+            salva = repository.save(salva);
         }
+        indiceHash.inserir(salva);
         return salva;
     }
 
@@ -79,9 +91,27 @@ public class bolsahemocomponenteservice {
         return fefoService.listarEmOrdemFefo(compativeis);
     }
 
+    public List<bolsahemocomponente> consultarPorHashCompatibilidadeFefo(requisicao requisicao) {
+        if (requisicao == null) {
+            return List.of();
+        }
+
+        if (requisicao.getComponente() == null || requisicao.getComponente().isBlank()) {
+            return List.of();
+        }
+        List<bolsahemocomponente> candidatas = indiceHash.consultarPorTipos(
+                compatibilidadeABOService.tiposDoadoresCompativeis(requisicao.getTipoSanguineo()),
+                requisicao.getComponente());
+        candidatas = candidatas.stream()
+                .filter(bolsa -> compatibilidadeABOService.testeABO(
+                        requisicao.getTipoSanguineo(), bolsa.getTipoSanguineo()))
+                .toList();
+        return fefoService.listarEmOrdemFefo(candidatas);
+    }
+
     @Transactional
     public bolsahemocomponente alocar(Long bolsaId, requisicao requisicao) {
-        if (requisicao == null || requisicao.getId() == null) {
+        if (bolsaId == null || requisicao == null || requisicao.getId() == null) {
             throw new IllegalArgumentException("Requisição válida é obrigatória para alocar uma bolsa");
         }
 
@@ -95,18 +125,41 @@ public class bolsahemocomponenteservice {
         if (!compatibilidadeABOService.testeABO(requisicao.getTipoSanguineo(), bolsa.getTipoSanguineo())) {
             throw new IllegalArgumentException("A bolsa não é compatível com o tipo sanguíneo da requisição");
         }
+        if (requisicao.getComponente() != null && !requisicao.getComponente().isBlank()
+                && !EspalhamentoHash.normalizarComponente(requisicao.getComponente())
+                .equals(EspalhamentoHash.normalizarComponente(bolsa.getComponente()))) {
+            throw new IllegalArgumentException("O componente da bolsa não corresponde à requisição");
+        }
+
+        List<bolsahemocomponente> candidatas = consultarPorHashCompatibilidadeFefo(requisicao);
+        if (candidatas.isEmpty() || !bolsaId.equals(candidatas.get(0).getId())) {
+            throw new IllegalStateException("A alocação deve respeitar a bolsa compatível disponível com validade mais próxima");
+        }
 
         List<bolsahemocomponente> alocacoesAnteriores =
                 repository.findAllByRequisicao_IdAndStatusIgnoreCase(requisicao.getId(), "ALOCADA");
         for (bolsahemocomponente alocacaoAnterior : alocacoesAnteriores) {
             alocacaoAnterior.setRequisicao(null);
             alocacaoAnterior.setStatus(alocacaoAnterior.estaVencida() ? "VENCIDA" : "DISPONIVEL");
+            indiceHash.remover(alocacaoAnterior);
             repository.save(alocacaoAnterior);
+            indiceHash.inserir(alocacaoAnterior);
         }
 
         bolsa.setRequisicao(requisicao);
         bolsa.setStatus("ALOCADA");
-        return repository.save(bolsa);
+        indiceHash.remover(bolsa);
+        bolsahemocomponente alocada = repository.save(bolsa);
+        return alocada;
+    }
+
+    @Transactional
+    public bolsahemocomponente alocarProximaFefo(requisicao requisicao) {
+        List<bolsahemocomponente> candidatas = consultarPorHashCompatibilidadeFefo(requisicao);
+        if (candidatas.isEmpty()) {
+            throw new IllegalStateException("Não existem hemocomponentes compatíveis disponíveis");
+        }
+        return alocar(candidatas.get(0).getId(), requisicao);
     }
 
     public Optional<bolsahemocomponente> buscarPorId(Long id) {
@@ -124,7 +177,10 @@ public class bolsahemocomponenteservice {
         bolsaAtualizada.setCodigo(existente.getCodigo());
         bolsaAtualizada.setRequisicao(existente.getRequisicao());
         bolsaAtualizada.setStatus(existente.getRequisicao() == null ? "DISPONIVEL" : "ALOCADA");
-        return repository.save(bolsaAtualizada);
+        indiceHash.remover(existente);
+        bolsahemocomponente atualizada = repository.save(bolsaAtualizada);
+        indiceHash.inserir(atualizada);
+        return atualizada;
     }
 
     public boolean deletar(Long id) {
@@ -136,6 +192,7 @@ public class bolsahemocomponenteservice {
             return false;
         }
 
+        repository.findById(id).ifPresent(indiceHash::remover);
         repository.deleteById(id);
         return true;
     }
