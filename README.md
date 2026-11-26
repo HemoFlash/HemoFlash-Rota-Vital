@@ -11,6 +11,8 @@
 
 O sistema gerencia o estoque por tipo e componente, recebe requisições dos hospitais, aloca bolsas compatíveis priorizando a validade (FEFO), calcula rotas entre hospitais considerando a modalidade de transporte, os limites demonstrativos de conservação do componente e a validade, e monitora periodicamente a temperatura de cada veículo em transporte.
 
+**Acesse online em:** https://hemoflash-rota-vital.onrender.com/
+
 > ⚠️ O projeto utiliza **exclusivamente dados sintéticos** (sem dados reais de doadores/pacientes — LGPD). A telemetria de temperatura/GPS é simulada e a compatibilidade ABO/Rh possui finalidade **didática**, não substituindo protocolos clínicos. Não há integração com sistemas oficiais da Hemorrede.
 
 ### Ficha do Projeto
