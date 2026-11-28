@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.rotavital.tuguy.model.veiculotransportemonitoramentoTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.734 s -- in com.rotavital.tuguy.model.veiculotransportemonitoramentoTest
